@@ -2,7 +2,7 @@
 #       - Geoffroy Penny
 
 import requests
-
+import kivy
 
 # Gets a valid Platform Routing Value region tag from the region entered by the user
 def get_region():
@@ -60,16 +60,36 @@ def get_ranked_data():
 
 
 # Gets the summoners match history
+# Queue types:
+    # 420 solo/duo ranked
+    # 430 blind pick
+    # 440 flex ranked
+    # 450 ARAM
 def get_match_history():
-    url = "https://" + region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + account_id +\
-          "?api_key=" + DevelopmentAPIKey
-    print(url)
-    url_data = requests.get(url)
-    return url_data.json()
-
+    queue_type = "420"
+    if queue_type == "420":
+        url = "https://" + region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + account_id + "?queue=" + \
+              queue_type + "&api_key=" + DevelopmentAPIKey
+        url_data = requests.get(url)
+        return url_data.json()
+    if queue_type == "430":
+        url = "https://" + region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + account_id + "?queue=" + \
+              queue_type + "&api_key=" + DevelopmentAPIKey
+        url_data = requests.get(url)
+        return url_data.json()
+    if queue_type == "440":
+        url = "https://" + region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + account_id + "?queue=" + \
+              queue_type + "&api_key=" + DevelopmentAPIKey
+        url_data = requests.get(url)
+        return url_data.json()
+    if queue_type == "450":
+        url = "https://" + region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + account_id + "?queue=" + \
+              queue_type + "&api_key=" + DevelopmentAPIKey
+        url_data = requests.get(url)
+        return url_data.json()
 
 # DevelopmentAPIKey = input("Enter your DEVELOPMENT API KEY")
-DevelopmentAPIKey = "RGAPI-897e2260-3004-4581-98c8-22ff4d26c36f"
+DevelopmentAPIKey = "RGAPI-45dd6feb-1a36-49d2-8052-975eb4c28549"
 
 region = get_region()
 # Region = "NA1"
