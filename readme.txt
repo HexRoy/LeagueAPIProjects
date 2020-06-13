@@ -4,6 +4,7 @@ Useful developer links:
 https://developer.riotgames.com/apis
 https://developer.riotgames.com/docs/lol
 https://developer.riotgames.com/
+https://kivy.org/doc/stable/
 
 This app is ran off of Kivy
 ---------------------------------

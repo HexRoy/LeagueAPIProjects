@@ -1,0 +1,20 @@
+<HomeGui>
+
+    summonerName: summonerName
+    # Todo
+    #   Float layout
+    GridLayout:
+        cols:1
+        size: root.width, root.height
+        Label:
+            text: "League Lookup"
+        GridLayout:
+            cols:3
+            Label:
+                text: "Summoner Name"
+            TextInput:
+                id: summonerName
+                multiline: False
+        Button:
+            text: "Search"
+            on_press: root.search_button()

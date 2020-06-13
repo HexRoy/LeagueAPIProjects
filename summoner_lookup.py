@@ -2,7 +2,6 @@
 #       - Geoffroy Penny
 
 import requests
-import kivy
 
 # Gets a valid Platform Routing Value region tag from the region entered by the user
 def get_region():
@@ -88,41 +87,41 @@ def get_match_history():
         url_data = requests.get(url)
         return url_data.json()
 
-# DevelopmentAPIKey = input("Enter your DEVELOPMENT API KEY")
-DevelopmentAPIKey = "RGAPI-45dd6feb-1a36-49d2-8052-975eb4c28549"
-
-region = get_region()
-# Region = "NA1"
-
-# Basic summoner data
-summoner_data = get_summoner_data()
-summoner_id = summoner_data['id']
-account_id = summoner_data['accountId']
-summoner_name = summoner_data['name']
-summoner_level = summoner_data["summonerLevel"]
-
-# Ranked summoner data: 0 is flex data, 1 is solo/duo data
-ranked_data = get_ranked_data()
-solo_tier = ranked_data[0]['tier']
-solo_rank = ranked_data[0]['rank']
-solo_lp = ranked_data[0]['leaguePoints']
-flex_tier = ranked_data[1]['tier']
-flex_rank = ranked_data[1]['rank']
-flex_lp = ranked_data[1]['leaguePoints']
-
-# Match history data
-match_history = get_match_history()
-print(match_history)
-
-# Prints statements
-print("The Selected Region is: ", region)
-print("Hello, " + summoner_name                          # Prints Summoner name
-      + "\nLvl:", summoner_level,                        # Summoner level
-      "\nSummonerID: (" + summoner_id + ")"              # Summoner Id
-      + "\nAccountID: (" + account_id + ")")             # Account id
-
-print("Your solo/duo rank is:", solo_tier, solo_rank, solo_lp, "LP")
-print("Your flex rank is:", flex_tier, flex_rank, flex_lp, "LP")
+# # DevelopmentAPIKey = input("Enter your DEVELOPMENT API KEY")
+# DevelopmentAPIKey = "RGAPI-45dd6feb-1a36-49d2-8052-975eb4c28549"
+#
+# region = get_region()
+# # Region = "NA1"
+#
+# # Basic summoner data
+# summoner_data = get_summoner_data()
+# summoner_id = summoner_data['id']
+# account_id = summoner_data['accountId']
+# summoner_name = summoner_data['name']
+# summoner_level = summoner_data["summonerLevel"]
+#
+# # Ranked summoner data: 0 is flex data, 1 is solo/duo data
+# ranked_data = get_ranked_data()
+# solo_tier = ranked_data[0]['tier']
+# solo_rank = ranked_data[0]['rank']
+# solo_lp = ranked_data[0]['leaguePoints']
+# flex_tier = ranked_data[1]['tier']
+# flex_rank = ranked_data[1]['rank']
+# flex_lp = ranked_data[1]['leaguePoints']
+#
+# # Match history data
+# match_history = get_match_history()
+# print(match_history)
+#
+# # Prints statements
+# print("The Selected Region is: ", region)
+# print("Hello, " + summoner_name                          # Prints Summoner name
+#       + "\nLvl:", summoner_level,                        # Summoner level
+#       "\nSummonerID: (" + summoner_id + ")"              # Summoner Id
+#       + "\nAccountID: (" + account_id + ")")             # Account id
+#
+# print("Your solo/duo rank is:", solo_tier, solo_rank, solo_lp, "LP")
+# print("Your flex rank is:", flex_tier, flex_rank, flex_lp, "LP")
 
 # TODO
 #  Add main + add params for each function after testing.
