@@ -21,4 +21,4 @@ Otherwise, install:
 	python -m pip install kivy==1.11.1
 	
 Sample GUI
- ![alt text] (https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/Sample%20GUI.png)
+ ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/Sample%20GUI.png)
