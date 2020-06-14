@@ -1,6 +1,14 @@
-<HomeGui>
+GuiManager:
+    HomeGui:
+    ProfileGui:
+    #AllChampionsGui:
+    #SingleChampionGui:
 
-    summonerName: summonerName
+
+<HomeGui>:
+    name: "home"
+    summoner_name: summonerName
+    region_selection: regionSelection
     # Todo
     #   Float layout
     GridLayout:
@@ -12,9 +20,24 @@
             cols:3
             Label:
                 text: "Summoner Name"
+            Spinner:
+                id: regionSelection
+                text: "Region"
+                values: "NA", "BR", "EUN", "EUW", "JP", "KR", "LA1", "LA2", "OC", "TR", "RU"
             TextInput:
                 id: summonerName
                 multiline: False
+                on_text_validate:
+                    root.check_summoner_name()
         Button:
             text: "Search"
-            on_press: root.search_button()
+            on_release:
+                root.check_summoner_name()
+
+<ProfileGui>:
+    name: "profile"
+    Button:
+        text: "Go Back"
+        on_release:
+            app.root.current = "home"
+            app.root.transition.direction = "right"
