@@ -33,6 +33,7 @@ GuiManager:
             text: "Search"
             on_release:
                 root.check_summoner_name()
+                app.root.transition.direction = "left"
 
 <ProfileGui>:
     name: "profile"
@@ -41,3 +42,18 @@ GuiManager:
         on_release:
             app.root.current = "home"
             app.root.transition.direction = "right"
+
+
+<InvalidSearchPopup>
+    FloatLayout:
+        size_hint:(0.3, 0.3)
+        pos_hint:{"center_x":0.5, "center_y":0.5}
+        Label:
+            text: "Invalid Search"
+            pos_hint: {"x":0.2, "top":1}
+            size_hint: 0.6, 0.2
+        Button:
+            pos_hint: {"x":0.1, "y":0.1}
+            size_hint: 0.8, 0.2
+            text: "Go Back"
+

@@ -1,10 +1,10 @@
 This repo contains some programs related to the riot game: Leauge of Legands
 
 Useful developer links:
-https://developer.riotgames.com/apis
-https://developer.riotgames.com/docs/lol
-https://developer.riotgames.com/
-https://kivy.org/doc/stable/
+* https://developer.riotgames.com/apis
+* https://developer.riotgames.com/docs/lol
+* https://developer.riotgames.com/
+* https://kivy.org/doc/stable/
 
 This app is ran off of Kivy
 ---------------------------------
@@ -38,6 +38,7 @@ Sample GUI
  * Live Game
  match ups
  win percentages/ win percentages on and against those champs
+ click on champs to get tips/ against then. your champ tips for them in mini popup
  
  
  * Champion overview 

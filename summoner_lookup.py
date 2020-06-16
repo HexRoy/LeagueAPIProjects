@@ -2,7 +2,8 @@
 #       - Geoffroy Penny
 
 import requests
-
+DevelopmentAPIKey = "RGAPI-94124332-511c-471d-a66d-974fc79f3b65"
+region = "NA1"
 # Gets a valid Platform Routing Value region tag from the region entered by the user
 def get_region():
     # Converts region name to Platform Routing Value
@@ -87,11 +88,10 @@ def get_match_history():
         url_data = requests.get(url)
         return url_data.json()
 
-# # DevelopmentAPIKey = input("Enter your DEVELOPMENT API KEY")
-# DevelopmentAPIKey = "RGAPI-45dd6feb-1a36-49d2-8052-975eb4c28549"
-#
-# region = get_region()
-# # Region = "NA1"
+
+# #
+# # region = get_region()
+# Region = "NA1"
 #
 # # Basic summoner data
 # summoner_data = get_summoner_data()
