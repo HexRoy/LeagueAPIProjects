@@ -13,7 +13,7 @@ import requests
 
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-94124332-511c-471d-a66d-974fc79f3b65"
+DevelopmentAPIKey = "RGAPI-c101c71f-cf64-4bb6-8a1d-f9dd38943108"
 
 
 # ==========================================================================================
@@ -54,10 +54,12 @@ class HomeGui(Screen):
         # To make sure there is an input: Checks for region and summoner name
         #   self refers to the home screen object where data is entered, not summoner_1
         if self.region_selection.text == "Region":
-            invalid_search()
+            test = InvalidSearchPopup()
+            test.popup.open()
             print("change Region")
         elif self.summoner_name.text == "":
-            invalid_search()
+            test = InvalidSearchPopup()
+            test.popup.open()
             print("change sum name")
         else:       # There is data in both entries, now we test if the summoner exists
             region = region_conversion[self.region_selection.text]
@@ -74,7 +76,8 @@ class HomeGui(Screen):
                 summoner_1.name = self.summoner_name
                 self.parent.current = "profile"
             else:
-                invalid_search()
+                test = InvalidSearchPopup()
+                test.popup.open()
                 print("no summoner " + self.summoner_name.text + " found in region: " + region)
 
     # Todo
@@ -87,25 +90,52 @@ class HomeGui(Screen):
         pass
 
 
+# ==========================================================================================
+#       Invalid Search Popup: Displays popups for bad searches
+#           Types:   No region selected
+#                    No summoner name input
+#                    Bad search: the combination is not found
+# ==========================================================================================
 class InvalidSearchPopup(FloatLayout):
     def __init__(self, **kwargs):
         super(FloatLayout, self).__init__(**kwargs)
+        self.popup = Popup(title="Invalid", content=self, size_hint=(.3, .3), auto_dismiss=True)
 
+    def open_popup(self):
+        self.popup.open()
+
+    def close_popup(self):
+        self.popup.dismiss()
+
+
+# ==========================================================================================
+#       Profile Gui:
+# ==========================================================================================
 class ProfileGui(Screen):
     def __init__(self, **kwargs):
         super(Screen, self).__init__(**kwargs)
         self.name = "profile"
 
+
+# ==========================================================================================
+#       All Champions Gui:
+# ==========================================================================================
 class AllChampionsGui(Screen):
     def __init__(self, **kwargs):
         super(Screen, self).__init__(**kwargs)
 
 
+# ==========================================================================================
+#       Single Champion Gui:
+# ==========================================================================================
 class SingleChampionGui(Screen):
     def __init__(self, **kwargs):
         super(Screen, self).__init__(**kwargs)
 
 
+# ==========================================================================================
+#       Gui Manager:
+# ==========================================================================================
 class GuiManager(ScreenManager):
     pass
 
@@ -117,23 +147,9 @@ class Summoner:
 
 
 # ==========================================================================================
-#       Invalid Search Popup: Displays popups for bad searches
-#           Types:   No region selected
-#                    No summoner name input
-#                    Bad search: the combination is not found
-# ==========================================================================================
-def invalid_search():
-    show = InvalidSearchPopup()
-    popup = Popup(title="Invalid", content=show, size_hint=(.3, .3), auto_dismiss=False)
-    popup.open()
-
-
-# ==========================================================================================
 #       The startup code
 # ==========================================================================================
-
 summoner_1 = Summoner()
-
 kv = Builder.load_file("leaguelookup.kv")
 
 

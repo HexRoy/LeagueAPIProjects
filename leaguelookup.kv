@@ -14,8 +14,9 @@ GuiManager:
     GridLayout:
         cols:1
         size: root.width, root.height
-        Label:
-            text: "League Lookup"
+
+        Image:
+            source: "images/logo.png"
         GridLayout:
             cols:3
             Label:
@@ -37,11 +38,13 @@ GuiManager:
 
 <ProfileGui>:
     name: "profile"
-    Button:
-        text: "Go Back"
-        on_release:
-            app.root.current = "home"
-            app.root.transition.direction = "right"
+    FloatLayout:
+        Button:
+            size_hint: 1, 0.1
+            text: "Go Back"
+            on_release:
+                app.root.current = "home"
+                app.root.transition.direction = "right"
 
 
 <InvalidSearchPopup>
@@ -56,4 +59,7 @@ GuiManager:
             pos_hint: {"x":0.1, "y":0.1}
             size_hint: 0.8, 0.2
             text: "Go Back"
+            on_release:
+                root.close_popup()
+
 
