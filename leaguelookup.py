@@ -21,7 +21,7 @@ DevelopmentAPIKey = "RGAPI-c101c71f-cf64-4bb6-8a1d-f9dd38943108"
 # ==========================================================================================
 class HomeGui(Screen):
 
-    # Pulled from leaguelookup.kv
+    # Variables pulled from from <HomeGui> leaguelookup.kv
     summoner_name = ObjectProperty(None)
     region_selection = ObjectProperty(None)
 
@@ -54,12 +54,12 @@ class HomeGui(Screen):
         # To make sure there is an input: Checks for region and summoner name
         #   self refers to the home screen object where data is entered, not summoner_1
         if self.region_selection.text == "Region":
-            test = InvalidSearchPopup()
-            test.popup.open()
+            popup = InvalidSearchPopup()
+            popup.open_popup_1()
             print("change Region")
         elif self.summoner_name.text == "":
-            test = InvalidSearchPopup()
-            test.popup.open()
+            popup = InvalidSearchPopup()
+            popup.open_popup_2()
             print("change sum name")
         else:       # There is data in both entries, now we test if the summoner exists
             region = region_conversion[self.region_selection.text]
@@ -76,32 +76,49 @@ class HomeGui(Screen):
                 summoner_1.name = self.summoner_name
                 self.parent.current = "profile"
             else:
-                test = InvalidSearchPopup()
-                test.popup.open()
+                popup = InvalidSearchPopup()
+                popup.open_popup_3()
                 print("no summoner " + self.summoner_name.text + " found in region: " + region)
 
     # Todo
-    #   implement add/remove favorite
-    #   to add or remove summoner name from favorites for easy lookup
+    #   Check if already on favorites
+    #       If not, add to bottom of grid layout and remove from search history grid layout.
+    #       Reposition search history grid layout
     def add_favorite(self):
         pass
 
+    # Todo
+    #   Remove off of the layout and reposition the others
+    #       Open file, keep all names except the one that was unselected. Rewrite and save the file
+    #       Pandas makes this easy
     def remove_favorite(self):
         pass
 
 
 # ==========================================================================================
 #       Invalid Search Popup: Displays popups for bad searches
-#           Types:   No region selected
-#                    No summoner name input
-#                    Bad search: the combination is not found
+#           Types:  1 = No region selected
+#                   2 = No summoner name input
+#                   3 = Bad search: the combination is not found
 # ==========================================================================================
 class InvalidSearchPopup(FloatLayout):
+    # Variables pulled from from <HomeGui> leaguelookup.kv
+    popup_label = ObjectProperty(None)
+
     def __init__(self, **kwargs):
         super(FloatLayout, self).__init__(**kwargs)
-        self.popup = Popup(title="Invalid", content=self, size_hint=(.3, .3), auto_dismiss=True)
+        self.popup = Popup(title="Error!", content=self, size_hint=(.3, .3), auto_dismiss=True)
 
-    def open_popup(self):
+    def open_popup_1(self):
+        self.popup_label.text = "Select a region"
+        self.popup.open()
+
+    def open_popup_2(self):
+        self.popup_label.text = "Enter a summoner name"
+        self.popup.open()
+
+    def open_popup_3(self):
+        self.popup_label.text = "Summoner not found"
         self.popup.open()
 
     def close_popup(self):
@@ -109,7 +126,9 @@ class InvalidSearchPopup(FloatLayout):
 
 
 # ==========================================================================================
-#       Profile Gui:
+#       Profile Gui: Overview of the searched summoner. Rank, win rate, match history
+# Todo
+#   Add favorite star to remove/add to favorites from their profile
 # ==========================================================================================
 class ProfileGui(Screen):
     def __init__(self, **kwargs):
@@ -118,7 +137,7 @@ class ProfileGui(Screen):
 
 
 # ==========================================================================================
-#       All Champions Gui:
+#       All Champions Gui: List of all champion stats from the current season
 # ==========================================================================================
 class AllChampionsGui(Screen):
     def __init__(self, **kwargs):
@@ -126,7 +145,7 @@ class AllChampionsGui(Screen):
 
 
 # ==========================================================================================
-#       Single Champion Gui:
+#       Single Champion Gui: All stats about a single champion the summoner plays
 # ==========================================================================================
 class SingleChampionGui(Screen):
     def __init__(self, **kwargs):
@@ -160,3 +179,9 @@ class leaguelookupApp(App):
 
 if __name__ == "__main__":
     leaguelookupApp().run()
+
+
+# Todo
+#   to add or remove summoner name from favorites for easy lookup
+#   implement add/remove favorite
+#   Add different errors to invalid lookup: no name/ region/ invalid

@@ -4,60 +4,114 @@ GuiManager:
     #AllChampionsGui:
     #SingleChampionGui:
 
-
+# ==========================================================================================
+#       Home Gui: Contains summoner lookup, region selection, and favorites
+# ==========================================================================================
 <HomeGui>:
     name: "home"
     summoner_name: summonerName
     region_selection: regionSelection
-    # Todo
-    #   Float layout
-    GridLayout:
-        cols:1
+
+    # Background image
+    canvas:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            source: "images/background.png"
+
+    FloatLayout:
         size: root.width, root.height
 
         Image:
+            pos_hint: {"top":1.4}
             source: "images/logo.png"
-        GridLayout:
-            cols:3
-            Label:
-                text: "Summoner Name"
-            Spinner:
-                id: regionSelection
-                text: "Region"
-                values: "NA", "BR", "EUN", "EUW", "JP", "KR", "LA1", "LA2", "OC", "TR", "RU"
-            TextInput:
-                id: summonerName
-                multiline: False
-                on_text_validate:
-                    root.check_summoner_name()
+
+        # Summoner search
+        Spinner:
+            size_hint: .1, .07
+            pos_hint: {"x":.6, "y":.6}
+            id: regionSelection
+            text: "Region"
+            values: "NA", "BR", "EUN", "EUW", "JP", "KR", "LA1", "LA2", "OC", "TR", "RU"
+        Label:
+            size_hint: .4, .07
+            pos_hint: {"x":.2, "y":.65}
+            text: "Summoner Name"
+        TextInput:
+            size_hint: .4, .07
+            pos_hint: {"x":.2, "y":.6}
+            id: summonerName
+            multiline: False
+            on_text_validate:
+                root.check_summoner_name()
         Button:
+            size_hint: .1, .07
+            pos_hint: {"x":.7, "y":.6}
             text: "Search"
             on_release:
                 root.check_summoner_name()
                 app.root.transition.direction = "left"
 
+        # Favorites and previous searches
+        GridLayout:
+            cols: 2
+            size_hint: 1, .4
+            pos_hint: {"y":.1}
+            GridLayout:
+                cols: 1
+                ToggleButton:
+                    pos_hint: {"x":.5, "y":.2}
+                    size_hint: .1, .1
+                    allow_stretch: False
+                    background_normal: "images/blackstar.png"
+                    background_down: "images/goldstar.png"
+                ToggleButton:
+                    pos_hint: {"x":.5, "y":.2}
+                    size_hint: .1, .1
+                    allow_stretch: False
+                    background_normal: "images/blackstar.png"
+                    background_down: "images/goldstar.png"
+                ToggleButton:
+                    pos_hint: {"x":.5, "y":.2}
+                    size_hint: .1, .1
+                    allow_stretch: False
+                    background_normal: "images/blackstar.png"
+                    background_down: "images/goldstar.png"
+            GridLayout:
+                cols: 1
+                ToggleButton:
+                    pos_hint: {"x":.5, "y":.2}
+                    size_hint: .1, .1
+                    allow_stretch: False
+                    background_normal: "images/blackstar.png"
+                    background_down: "images/goldstar.png"
+
+
 <ProfileGui>:
     name: "profile"
     FloatLayout:
         Button:
-            size_hint: 1, 0.1
-            text: "Go Back"
+            pos_hint: {"top":1}
+            size_hint: 1, .15
+            background_normal: "images/logo.png"
             on_release:
                 app.root.current = "home"
                 app.root.transition.direction = "right"
 
 
 <InvalidSearchPopup>
+    popup_label: popupLabel
     FloatLayout:
         size_hint:(0.3, 0.3)
         pos_hint:{"center_x":0.5, "center_y":0.5}
         Label:
-            text: "Invalid Search"
+            id: popupLabel
+            text: ""        # Text is added based on what error is occurring: Check class for details
             pos_hint: {"x":0.2, "top":1}
             size_hint: 0.6, 0.2
         Button:
-            pos_hint: {"x":0.1, "y":0.1}
-            size_hint: 0.8, 0.2
+            pos_hint: {"x":-0.25, "y":-0.4}
+            size_hint: 1.5, 0.8
             text: "Go Back"
             on_release:
                 root.close_popup()
