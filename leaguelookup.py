@@ -10,10 +10,12 @@ from kivy.uix.popup import Popup
 from kivy.uix.floatlayout import FloatLayout
 from kivy.lang import Builder
 import requests
-
+import pandas
+import os
+from time import ctime
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-c101c71f-cf64-4bb6-8a1d-f9dd38943108"
+DevelopmentAPIKey = "RGAPI-e866899f-f95f-4b2c-bac2-fcae4d3fa611"
 
 
 # ==========================================================================================
@@ -31,8 +33,9 @@ class HomeGui(Screen):
     def check_summoner_name(self):
         """
          check_summoner_name
-
          Checks to see if a user with the name entered exists in the region selected
+            otherwise calls the correct error popup
+         Adds all basic summoner data to the summoner_1 object for later use in the ProfileGui class
         :return:
         """
 
@@ -68,12 +71,26 @@ class HomeGui(Screen):
             url = "https://" + region + ".api.riotgames.com/lol/summoner/v4/summoners/by-name/" + \
                   self.summoner_name.text + "?api_key=" + DevelopmentAPIKey
             url_data = requests.get(url)
+            summoner_data = url_data.json()
+            summoner_1.summoner_data = summoner_data
+
             code = url_data.status_code
 
             # Checks to see if the enter summoner name is valid in that region
             if code == 200:
                 summoner_1.region = region
-                summoner_1.name = self.summoner_name
+                summoner_1.name = summoner_1.summoner_data['name']
+                summoner_1.account_id = summoner_1.summoner_data['accountId']
+                summoner_1.puuid = summoner_1.summoner_data['puuid']
+                summoner_1.id = summoner_1.summoner_data['id']
+                summoner_1.profile_icon_id = summoner_1.summoner_data['profileIconId']
+                summoner_1.revision_date = summoner_1.summoner_data['revisionDate']
+                summoner_1.summoner_level = summoner_1.summoner_data['summonerLevel']
+
+                summoner_1.print_all()
+
+                self.add_history()
+
                 self.parent.current = "profile"
             else:
                 popup = InvalidSearchPopup()
@@ -85,6 +102,10 @@ class HomeGui(Screen):
     #       If not, add to bottom of grid layout and remove from search history grid layout.
     #       Reposition search history grid layout
     def add_favorite(self):
+        """
+        add_favorite: adds a valid summoner name + region to the favorites list
+        :return:
+        """
         pass
 
     # Todo
@@ -92,7 +113,27 @@ class HomeGui(Screen):
     #       Open file, keep all names except the one that was unselected. Rewrite and save the file
     #       Pandas makes this easy
     def remove_favorite(self):
+        """
+        remove_favorite: removes the summoner name from the favorites
+        :return:
+        """
         pass
+
+    # Todo
+    #   Remove when added to favorites
+    #       maybe : If on favorites, do not let it appear in history
+    def add_history(self):
+        """
+        add_history: add a successful summoner search to the history.csv file
+        :return:
+        """
+        new_entry = pandas.DataFrame({'name': [summoner_1.name],
+                               'region': [summoner_1.region]})
+        if not os.path.isfile('history.csv'):   # If there is no history file, create one
+            new_entry.to_csv('history.csv', header=['name', 'region'], index=False)
+        else:                                   # Else, adds new search and deletes duplicates
+            df = pandas.read_csv('history.csv').iloc[::-1].append(new_entry)
+            df = df.iloc[::-1].drop_duplicates(['name', 'region']).to_csv('history.csv', index=False)
 
 
 # ==========================================================================================
@@ -110,18 +151,34 @@ class InvalidSearchPopup(FloatLayout):
         self.popup = Popup(title="Error!", content=self, size_hint=(.3, .3), auto_dismiss=True)
 
     def open_popup_1(self):
+        """
+        open_popup_1: opens the no region selected popup
+        :return:
+        """
         self.popup_label.text = "Select a region"
         self.popup.open()
 
     def open_popup_2(self):
+        """
+        open_popup_2: opens the no summoner name popup
+        :return:
+        """
         self.popup_label.text = "Enter a summoner name"
         self.popup.open()
 
     def open_popup_3(self):
+        """
+        open_popup_3: opens the summoner not found popup
+        :return:
+        """
         self.popup_label.text = "Summoner not found"
         self.popup.open()
 
     def close_popup(self):
+        """
+        close_popup: closes any of the three popups
+        :return:
+        """
         self.popup.dismiss()
 
 
@@ -162,8 +219,26 @@ class GuiManager(ScreenManager):
 class Summoner:
     def __init__(self):
         self.region = None
-        self.name = None
 
+        self.summoner_data = None
+        self.account_id = None
+        self.puuid = None
+        self.id = None
+        self.name = None
+        self.profile_icon_id = None
+        self.revision_date = None
+        self.summoner_level = None
+
+    def print_all(self):
+        print("region", self.region)
+        print("summoner_data", self.summoner_data)
+        print("account_id", self.account_id)
+        print("puuid", self.puuid)
+        print("id", self.id)
+        print("name", self.name)
+        print("profile_icon_id", self.profile_icon_id)
+        print("revision_date", self.revision_date)
+        print("summoner_level", self.summoner_level)
 
 # ==========================================================================================
 #       The startup code
