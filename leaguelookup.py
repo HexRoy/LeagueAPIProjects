@@ -8,14 +8,28 @@ from kivy.properties import ObjectProperty
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.popup import Popup
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.button import Button
+from kivy.uix.togglebutton import ToggleButton
 from kivy.lang import Builder
 import requests
 import pandas
 import os
-from time import ctime
+from functools import partial
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-e866899f-f95f-4b2c-bac2-fcae4d3fa611"
+DevelopmentAPIKey = ""
+
+# Todo
+#   Home GUI
+#       Have history grid layout and favorites grid layout be populated by start
+#   Add a settings tab
+#       choose default region
+#       reorder favorites
+#       color scheme
+#   Profiles GUI
+#       Refresh the favorites and history when returning to home screen
+#   Don't rewrite all data to summoner 1 until you need it in the next class, only rewrite json
+#   Add rank to the summoner name button
 
 
 # ==========================================================================================
@@ -23,17 +37,13 @@ DevelopmentAPIKey = "RGAPI-e866899f-f95f-4b2c-bac2-fcae4d3fa611"
 # ==========================================================================================
 class HomeGui(Screen):
 
-    # Variables pulled from from <HomeGui> leaguelookup.kv
-    summoner_name = ObjectProperty(None)
-    region_selection = ObjectProperty(None)
-
     def __init__(self, **kwargs):
         super(Screen, self).__init__(**kwargs)
 
-    def check_summoner_name(self):
+    def summoner_search(self):
         """
-         check_summoner_name
-         Checks to see if a user with the name entered exists in the region selected
+         summoner_search
+         Checks to see if a user with the name entered exists in the region selected and brings you to their profile
             otherwise calls the correct error popup
          Adds all basic summoner data to the summoner_1 object for later use in the ProfileGui class
         :return:
@@ -60,13 +70,14 @@ class HomeGui(Screen):
             popup = InvalidSearchPopup()
             popup.open_popup_1()
             print("change Region")
+        # No summoner name entered creates popup
         elif self.summoner_name.text == "":
             popup = InvalidSearchPopup()
             popup.open_popup_2()
             print("change sum name")
-        else:       # There is data in both entries, now we test if the summoner exists
+        #  There is data in both entries, now we test if the summoner exists
+        else:
             region = region_conversion[self.region_selection.text]
-
             # URL to lookup a summoners basic data
             url = "https://" + region + ".api.riotgames.com/lol/summoner/v4/summoners/by-name/" + \
                   self.summoner_name.text + "?api_key=" + DevelopmentAPIKey
@@ -75,7 +86,6 @@ class HomeGui(Screen):
             summoner_1.summoner_data = summoner_data
 
             code = url_data.status_code
-
             # Checks to see if the enter summoner name is valid in that region
             if code == 200:
                 summoner_1.region = region
@@ -87,53 +97,174 @@ class HomeGui(Screen):
                 summoner_1.revision_date = summoner_1.summoner_data['revisionDate']
                 summoner_1.summoner_level = summoner_1.summoner_data['summonerLevel']
 
+                # todo test print
                 summoner_1.print_all()
 
                 self.add_history()
 
                 self.parent.current = "profile"
+            # Gives the invalid search popup
             else:
                 popup = InvalidSearchPopup()
                 popup.open_popup_3()
                 print("no summoner " + self.summoner_name.text + " found in region: " + region)
 
-    # Todo
-    #   Check if already on favorites
-    #       If not, add to bottom of grid layout and remove from search history grid layout.
-    #       Reposition search history grid layout
-    def add_favorite(self):
+    def history_search(self, button):
+        """
+        history_search: searches a summoner from history bring you to their profile page
+            otherwise calls the correct error popup
+        Adds all basic summoner data to the summoner_1 object for later use in the ProfileGui class
+        :return:
+        """
+
+        name, region = button.text.split("  :  ")
+        print(" i did it bitcch ",name,region)
+        # URL to lookup a summoners basic data
+        url = "https://" + region + ".api.riotgames.com/lol/summoner/v4/summoners/by-name/" + \
+              name + "?api_key=" + DevelopmentAPIKey
+        url_data = requests.get(url)
+        summoner_data = url_data.json()
+        summoner_1.summoner_data = summoner_data
+
+        # All data for summoner lookup
+        summoner_1.region = region
+        summoner_1.name = summoner_1.summoner_data['name']
+        summoner_1.account_id = summoner_1.summoner_data['accountId']
+        summoner_1.puuid = summoner_1.summoner_data['puuid']
+        summoner_1.id = summoner_1.summoner_data['id']
+        summoner_1.profile_icon_id = summoner_1.summoner_data['profileIconId']
+        summoner_1.revision_date = summoner_1.summoner_data['revisionDate']
+        summoner_1.summoner_level = summoner_1.summoner_data['summonerLevel']
+
+        #todo test print
+        summoner_1.print_all()
+
+        self.add_history()
+        self.parent.current = "profile"
+
+    def add_favorite(self, name, region):
         """
         add_favorite: adds a valid summoner name + region to the favorites list
         :return:
         """
-        pass
+        new_entry = pandas.DataFrame({'name': [name],
+                                      'region': [region]})
+        # If there is no favorites file, create one
+        if not os.path.isfile('favorites.csv'):
+            new_entry.to_csv('favorites.csv', header=['name', 'region'], index=False)
+        # Else, adds name and region and deletes duplicates
+        else:
+            # In order to keep most recent search on top, and delete duplicates:
+            #   We reverse the csv file, append the new search to the "bottom" that then becomes the top
+            #   after reversing again. The we can delete all duplicates keeping the newest one making it easy to read
+            #   and add to the GUI later
+            df = pandas.read_csv('favorites.csv').append(new_entry).drop_duplicates(['name', 'region'])
+            df.to_csv('favorites.csv', index=False)
+        self.populate_favorites()
 
-    # Todo
-    #   Remove off of the layout and reposition the others
-    #       Open file, keep all names except the one that was unselected. Rewrite and save the file
-    #       Pandas makes this easy
-    def remove_favorite(self):
+    def remove_favorites(self, button):
         """
         remove_favorite: removes the summoner name from the favorites
         :return:
         """
-        pass
+        index = button.id
+        df = pandas.read_csv('favorites.csv')
 
-    # Todo
-    #   Remove when added to favorites
-    #       maybe : If on favorites, do not let it appear in history
-    def add_history(self):
+        # Removes name from history
+        df.drop(int(index)).to_csv('favorites.csv', index=False)
+
+        self.populate_favorites()
+
+    def populate_favorites(self):
+        """
+        populate_favorites: Populates the favorites grid layout with all entries in favorites.csv
+        :return:
+        """
+        self.favorites_grid_layout.clear_widgets()
+        print("POPULATING")
+        if not os.path.isfile('favorites.csv'):
+            new_entry = pandas.DataFrame({'name': ['HexRoy'],
+                                          'region': ['NA1']})
+            new_entry.to_csv('favorites.csv', header=['name', 'region'], index=False)
+
+        df = pandas.read_csv('favorites.csv')
+        for index, line in df.iterrows():
+            summoner_button = Button(text=line['name'] + "  :  " + line['region'], size_hint=(None, None),
+                                     height=self.height / 8, width=self.width / 3.5)
+            summoner_button.bind(on_press=partial(self.history_search))
+
+            favorite_button = Button(background_normal="images/goldstar.png", background_down="images/blackstar.png",
+                                     size_hint=(None, None), height=self.height / 8, width=self.width / 10,
+                                     id=str(index))
+            favorite_button.bind(on_press=partial(self.remove_favorites))
+
+            self.favorites_grid_layout.add_widget(summoner_button)
+            self.favorites_grid_layout.add_widget(favorite_button)
+
+    @staticmethod
+    def add_history():
         """
         add_history: add a successful summoner search to the history.csv file
         :return:
         """
         new_entry = pandas.DataFrame({'name': [summoner_1.name],
-                               'region': [summoner_1.region]})
-        if not os.path.isfile('history.csv'):   # If there is no history file, create one
+                                      'region': [summoner_1.region]})
+        # If there is no history file, create one
+        if not os.path.isfile('history.csv'):
             new_entry.to_csv('history.csv', header=['name', 'region'], index=False)
-        else:                                   # Else, adds new search and deletes duplicates
+        # Else, adds new search and deletes duplicates
+        else:
+            # In order to keep most recent search on top, and delete duplicates:
+            #   We reverse the csv file, append the new search to the "bottom" that then becomes the top
+            #   after reversing again. The we can delete all duplicates keeping the newest one making it easy to read
+            #   and add to the GUI later
             df = pandas.read_csv('history.csv').iloc[::-1].append(new_entry)
-            df = df.iloc[::-1].drop_duplicates(['name', 'region']).to_csv('history.csv', index=False)
+            df.iloc[::-1].drop_duplicates(['name', 'region']).to_csv('history.csv', index=False)
+
+    def remove_history(self, button):
+        """
+        remove_history: Removes the summoner name from the history by index
+                        Calls populate_history to update grid layout
+                        Calls add_favorites to add it to the favorites grid layout
+        :return:
+        """
+        index = button.id
+        df = pandas.read_csv('history.csv')
+
+        # Gets name and region to be added to favorites before its removed from history
+        name = df.iloc[int(index)]['name']
+        region = df.iloc[int(index)]['region']
+
+        # Removes name from history
+        df.drop(int(index)).to_csv('history.csv', index=False)
+
+        self.populate_history()
+        self.add_favorite(name, region)
+
+    def populate_history(self):
+        """
+        populate_history: Populates the history grid layout with all entries in history.csv
+        :return:
+        """
+
+        self.history_grid_layout.clear_widgets()
+
+        if not os.path.isfile('history.csv'):
+            new_entry = pandas.DataFrame({'name': ['HexRoy'],
+                                          'region': ['NA1']})
+            new_entry.to_csv('history.csv', header=['name', 'region'], index=False)
+
+        df = pandas.read_csv('history.csv')
+        for index, line in df.iterrows():
+            summoner_button = Button(text=line['name']+"  :  "+line['region'], size_hint=(None, None), height=self.height/8, width=self.width/3.5)
+            summoner_button.bind(on_press=partial(self.history_search))
+
+            favorite_button = Button(background_normal="images/blackstar.png", background_down="images/goldstar.png", size_hint=(None, None), height=self.height/8, width=self.width/10, id=str(index))
+            favorite_button.bind(on_press=partial(self.remove_history))
+
+
+            self.history_grid_layout.add_widget(summoner_button)
+            self.history_grid_layout.add_widget(favorite_button)
 
 
 # ==========================================================================================

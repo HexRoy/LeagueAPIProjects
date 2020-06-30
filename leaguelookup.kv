@@ -11,7 +11,8 @@ GuiManager:
     name: "home"
     summoner_name: summonerName
     region_selection: regionSelection
-
+    history_grid_layout: historyGridLayout
+    favorites_grid_layout: favoritesGridLayout
     # Background image
     canvas:
         Rectangle:
@@ -43,82 +44,54 @@ GuiManager:
             id: summonerName
             multiline: False
             on_text_validate:
-                root.check_summoner_name()
+                root.summoner_search()
         Button:
             size_hint: .1, .07
             pos_hint: {"x":.7, "y":.6}
             text: "Search"
             on_release:
-                root.check_summoner_name()
+                root.summoner_search()
                 app.root.transition.direction = "left"
 
-        # Todo will probably need two buttons, one for name (to be clicked and brought to profile) one for add to favs
-        # Todo make one scroll view for history and one for favorites
+        # Labels for history and favorites
+        Label:
+            text: "Favorites"
+            pos_hint: {"x": -.32, "y": .03}
+        Label:
+            text: "History"
+            pos_hint: {"x": .25, "y": .03}
+
+        Button:
+            text: "Refresh"
+            pos_hint: {'y': .5, 'x': .4}
+            size_hint: .15 , .075
+            on_press:
+                root.populate_history()
+                root.populate_favorites()
+
+
+
         # Favorites Scroll view
         ScrollView:
-            pos_hint: {"bottom": .2, "X": .2}
+            pos_hint: {"bottom": .2, "x": .03}
             size_hint: .4, .5
-            size: (self.width, self.height)
-
             GridLayout:
+                id: favoritesGridLayout
                 cols: 2
                 height: self.minimum_height
-                size_hint_y: None
+                size_hint: None, None
 
-                Button:
-                    text: "favorite"
-                    size_hint_y: None
-                    height: root.height/8
-                ToggleButton:
-                    allow_stretch: False
-                    background_normal: "images/blackstar.png"
-                    background_down: "images/goldstar.png"
-                    size_hint_y: None
-                    height: root.height/8
-                Button:
-                    text: "name"
-                    size_hint_y: None
-                    height: root.height/8
-                ToggleButton:
-                    allow_stretch: False
-                    background_normal: "images/blackstar.png"
-                    background_down: "images/goldstar.png"
-                    size_hint_y: None
-                    height: root.height/8
+
 
         # History scroll view
         ScrollView:
             pos_hint: {"bottom": .2, "x":.6}
             size_hint: .4, .5
-            size: (self.width, self.height)
-
             GridLayout:
+                id: historyGridLayout
                 cols: 2
                 height: self.minimum_height
-                size_hint_y: None
-
-                Button:
-                    text: "name"
-                    size_hint_y: None
-                    height: 200
-                ToggleButton:
-                    allow_stretch: False
-                    background_normal: "images/blackstar.png"
-                    background_down: "images/goldstar.png"
-                    size_hint_y: None
-                    height: 200
-                Button:
-                    text: "name"
-                    size_hint_y: None
-                    height: 200
-                ToggleButton:
-                    allow_stretch: False
-                    background_normal: "images/blackstar.png"
-                    background_down: "images/goldstar.png"
-                    size_hint_y: None
-                    height: 200
-
-
+                size_hint: None, None
 
 
 <ProfileGui>:
