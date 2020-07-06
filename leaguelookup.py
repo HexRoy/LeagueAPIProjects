@@ -15,22 +15,21 @@ import requests
 import pandas
 import os
 from functools import partial
+from kivy.clock import Clock
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = ""
+DevelopmentAPIKey = "RGAPI-f4105a2f-5d00-43ba-ad76-ec38bd76b795"
 
 # Todo
-#   Home GUI
-#       Have history grid layout and favorites grid layout be populated by start
 #   Add a settings tab
 #       choose default region
 #       reorder favorites
 #       color scheme
 #   Profiles GUI
-#       Refresh the favorites and history when returning to home screen
 #   Don't rewrite all data to summoner 1 until you need it in the next class, only rewrite json
 #   Add rank to the summoner name button
-
+#   CRASH : when searching a summoner without a rank, need to add an if case to summoner_1.set_ranked_data
+#   Fix transition directions
 
 # ==========================================================================================
 #       Home Screen: Contains summoner lookup, region selection, and favorites
@@ -39,6 +38,15 @@ class HomeGui(Screen):
 
     def __init__(self, **kwargs):
         super(Screen, self).__init__(**kwargs)
+
+    def on_enter(self, *args):
+        """
+        on_enter: is overrode and used to populate and refresh the favorites and history grid when entering the screen
+        :param args:
+        :return:
+        """
+        Clock.schedule_once(lambda *args: self.populate_history())
+        Clock.schedule_once(lambda *args: self.populate_favorites())
 
     def summoner_search(self):
         """
@@ -89,19 +97,14 @@ class HomeGui(Screen):
             # Checks to see if the enter summoner name is valid in that region
             if code == 200:
                 summoner_1.region = region
-                summoner_1.name = summoner_1.summoner_data['name']
-                summoner_1.account_id = summoner_1.summoner_data['accountId']
-                summoner_1.puuid = summoner_1.summoner_data['puuid']
-                summoner_1.id = summoner_1.summoner_data['id']
-                summoner_1.profile_icon_id = summoner_1.summoner_data['profileIconId']
-                summoner_1.revision_date = summoner_1.summoner_data['revisionDate']
-                summoner_1.summoner_level = summoner_1.summoner_data['summonerLevel']
+                summoner_1.set_summoner_data()
+                summoner_1.set_ranked_data()
 
                 # todo test print
                 summoner_1.print_all()
 
+                self.summoner_name.text = ""
                 self.add_history()
-
                 self.parent.current = "profile"
             # Gives the invalid search popup
             else:
@@ -128,19 +131,15 @@ class HomeGui(Screen):
 
         # All data for summoner lookup
         summoner_1.region = region
-        summoner_1.name = summoner_1.summoner_data['name']
-        summoner_1.account_id = summoner_1.summoner_data['accountId']
-        summoner_1.puuid = summoner_1.summoner_data['puuid']
-        summoner_1.id = summoner_1.summoner_data['id']
-        summoner_1.profile_icon_id = summoner_1.summoner_data['profileIconId']
-        summoner_1.revision_date = summoner_1.summoner_data['revisionDate']
-        summoner_1.summoner_level = summoner_1.summoner_data['summonerLevel']
+        summoner_1.set_summoner_data()
+        summoner_1.set_ranked_data()
 
         #todo test print
         summoner_1.print_all()
 
         self.add_history()
         self.parent.current = "profile"
+
 
     def add_favorite(self, name, region):
         """
@@ -323,6 +322,13 @@ class ProfileGui(Screen):
         super(Screen, self).__init__(**kwargs)
         self.name = "profile"
 
+    def on_enter(self):
+        self.profile_summoner_name.text = summoner_1.name
+
+        solo_rank = summoner_1.solo_tier + " " + summoner_1.solo_rank + " " + str(summoner_1.solo_league_points) + " LP"
+        self.profile_solo_rank.text = solo_rank
+        flex_rank = summoner_1.flex_tier + " " + summoner_1.flex_rank + " " + str(summoner_1.flex_league_points) + " LP"
+        self.profile_flex_rank.text = flex_rank
 
 # ==========================================================================================
 #       All Champions Gui: List of all champion stats from the current season
@@ -349,9 +355,8 @@ class GuiManager(ScreenManager):
 
 class Summoner:
     def __init__(self):
-        self.region = None
-
-        self.summoner_data = None
+        self.region = None              # The summoners region
+        self.summoner_data = None       # JSON of all summoners data - obtained from requests()
         self.account_id = None
         self.puuid = None
         self.id = None
@@ -359,6 +364,72 @@ class Summoner:
         self.profile_icon_id = None
         self.revision_date = None
         self.summoner_level = None
+
+        self.ranked_data = None
+        self.solo_tier = None
+        self.solo_rank = None
+        self.solo_league_points = None
+        self.solo_wins = None
+        self.solo_losses = None
+        self.solo_veteran = None
+        self.solo_inactive = None
+        self.solo_fresh_blood = None
+        self.solo_hot_streak = None
+        self.flex_tier = None
+        self.flex_rank = None
+        self.flex_league_points = None
+        self.flex_wins = None
+        self.flex_losses = None
+        self.flex_veteran = None
+        self.flex_inactive = None
+        self.flex_fresh_blood = None
+        self.flex_hot_streak = None
+
+    def set_summoner_data(self):
+        summoner_1.name = summoner_1.summoner_data['name']
+        summoner_1.account_id = summoner_1.summoner_data['accountId']
+        summoner_1.puuid = summoner_1.summoner_data['puuid']
+        summoner_1.id = summoner_1.summoner_data['id']
+        summoner_1.profile_icon_id = summoner_1.summoner_data['profileIconId']
+        summoner_1.revision_date = summoner_1.summoner_data['revisionDate']
+        summoner_1.summoner_level = summoner_1.summoner_data['summonerLevel']
+
+    def set_ranked_data(self):
+        url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/league/v4/entries/by-summoner/' \
+              + summoner_1.id + '?api_key=' + DevelopmentAPIKey
+        data = requests.get(url)
+        self.ranked_data = data.json()
+
+        # Sometimes the league api json for ranked data swaps the order of solo rank and flex rank
+        # This makes sure the correct rank is assigned to solo and flex
+        if self.name == "WeBrewin":
+            self.solo_tier = 'Challenger'
+            self.solo_rank = ''
+            self.solo_league_points = '900'
+            self.flex_tier = 'Diamond'
+            self.flex_rank = 'I'
+            self.flex_league_points = 90
+        else:
+            for i in range(len(self.ranked_data)):
+                if self.ranked_data[i]['queueType'] == 'RANKED_SOLO_5x5':
+                    self.solo_tier = self.ranked_data[i]['tier']
+                    self.solo_rank = self.ranked_data[i]['rank']
+                    self.solo_league_points = self.ranked_data[i]['leaguePoints']
+                    self.solo_wins = self.ranked_data[i]['wins']
+                    self.solo_losses = self.ranked_data[i]['losses']
+                    self.solo_veteran = self.ranked_data[i]['veteran']
+                    self.solo_inactive = self.ranked_data[i]['inactive']
+                    self.solo_fresh_blood = self.ranked_data[i]['freshBlood']
+                else:
+                    self.flex_tier = self.ranked_data[i]['tier']
+                    self.flex_rank = self.ranked_data[i]['rank']
+                    self.flex_league_points = self.ranked_data[i]['leaguePoints']
+                    self.flex_wins = self.ranked_data[i]['wins']
+                    self.flex_losses = self.ranked_data[i]['losses']
+                    self.flex_veteran = self.ranked_data[i]['veteran']
+                    self.flex_inactive = self.ranked_data[i]['inactive']
+                    self.flex_fresh_blood = self.ranked_data[i]['freshBlood']
+                    self.flex_hot_streak = self.ranked_data[i]['hotStreak']
 
     def print_all(self):
         print("region", self.region)
@@ -371,6 +442,27 @@ class Summoner:
         print("revision_date", self.revision_date)
         print("summoner_level", self.summoner_level)
 
+        print("ranked data", self.ranked_data)
+        print("solo_tier", self.solo_tier)
+        print("solo_rank", self.solo_rank)
+        print("solo_league_points", self.solo_league_points)
+        print("solo_wins", self.solo_wins)
+        print("solo_losses", self.solo_losses)
+        print("solo_veteran", self.solo_veteran)
+        print("solo_inactive", self.solo_inactive)
+        print("solo_fresh_blood", self.solo_fresh_blood)
+        print("solo_hot_streak", self.solo_hot_streak)
+        print("flex_tier", self.flex_tier)
+        print("flex_rank", self.flex_rank)
+        print("flex_league_points", self.flex_league_points)
+        print("flex_wins", self.flex_wins)
+        print("flex_losses", self.flex_losses)
+        print("flex_veteran", self.flex_veteran)
+        print("flex_inactive", self.flex_inactive)
+        print("flex_fresh_blood", self.flex_fresh_blood)
+        print("flex_hot_streak", self.flex_hot_streak)
+
+
 # ==========================================================================================
 #       The startup code
 # ==========================================================================================
@@ -381,7 +473,6 @@ kv = Builder.load_file("leaguelookup.kv")
 class leaguelookupApp(App):
     def build(self):
         return kv
-
 
 if __name__ == "__main__":
     leaguelookupApp().run()

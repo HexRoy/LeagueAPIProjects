@@ -61,6 +61,7 @@ GuiManager:
             text: "History"
             pos_hint: {"x": .25, "y": .03}
 
+        # Todo just for test can delete
         Button:
             text: "Refresh"
             pos_hint: {'y': .5, 'x': .4}
@@ -94,18 +95,9 @@ GuiManager:
                 size_hint: None, None
 
 
-<ProfileGui>:
-    name: "profile"
-    FloatLayout:
-        Button:
-            pos_hint: {"top":1}
-            size_hint: 1, .15
-            background_normal: "images/logo.png"
-            on_release:
-                app.root.current = "home"
-                app.root.transition.direction = "right"
-
-
+# ==========================================================================================
+#       Invalid Search Popup: A Window popup for invalid searches
+# ==========================================================================================
 <InvalidSearchPopup>
     popup_label: popupLabel
     FloatLayout:
@@ -123,4 +115,41 @@ GuiManager:
             on_release:
                 root.close_popup()
 
+
+# ==========================================================================================
+#       Profile Gui: Contains summoner information, and match history
+# ==========================================================================================
+<ProfileGui>:
+    name: "profile"
+    profile_summoner_name: profileSummonerName
+    profile_solo_rank: profileSoloRank
+    profile_flex_rank: profileFlexRank
+    canvas:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            source: "images/background.png"
+
+    FloatLayout:
+        Button:
+            pos_hint: {"top":1}
+            size_hint: 1, .15
+            background_normal: "images/logo.png"
+            on_release:
+                app.root.current = "home"
+                app.root.transition.direction = "right"
+
+
+        Label:
+            id: profileSummonerName
+            pos_hint: {"x": -.40, "y": .30}
+            text: ""
+        Label:
+            id: profileSoloRank
+            pos_hint: {"x": -.40, "y": .25}
+            text: ""
+        Label:
+            id: profileFlexRank
+            pos_hint: {"x": -.40, "y": .20}
+            text: ""
 
