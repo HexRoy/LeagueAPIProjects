@@ -30,6 +30,7 @@ DevelopmentAPIKey = "RGAPI-f4105a2f-5d00-43ba-ad76-ec38bd76b795"
 #   Add rank to the summoner name button
 #   CRASH : when searching a summoner without a rank, need to add an if case to summoner_1.set_ranked_data
 #   Fix transition directions
+#   Challenger rank not needed: Challenger I
 
 # ==========================================================================================
 #       Home Screen: Contains summoner lookup, region selection, and favorites
@@ -323,12 +324,43 @@ class ProfileGui(Screen):
         self.name = "profile"
 
     def on_enter(self):
+        """
+        on_enter: Determines what happens upon entering the screen "Profile"
+        :return:
+        """
         self.profile_summoner_name.text = summoner_1.name
+        self.profile_rank_icon.source = 'images/ranks/Emblem_' + self.get_better_rank() + '.png'
+        self.profile_region.text = summoner_1.region
 
         solo_rank = summoner_1.solo_tier + " " + summoner_1.solo_rank + " " + str(summoner_1.solo_league_points) + " LP"
         self.profile_solo_rank.text = solo_rank
+        self.profile_solo_win_loss.text = 'W/L: ' + str(summoner_1.solo_wins) + "/" + str(summoner_1.solo_losses)
+
         flex_rank = summoner_1.flex_tier + " " + summoner_1.flex_rank + " " + str(summoner_1.flex_league_points) + " LP"
         self.profile_flex_rank.text = flex_rank
+        self.profile_flex_win_loss.text = 'W/L: ' + str(summoner_1.flex_wins) + "/" + str(summoner_1.flex_losses)
+
+    @staticmethod
+    def get_better_rank():
+        """
+        get_better_rank: returns the better rank, either flex rank or solo rank
+        :return:
+        """
+        rank_tiers = {
+            'IRON': 1,
+            'BRONZE': 2,
+            'SILVER': 3,
+            'GOLD': 4,
+            'PLATINUM': 5,
+            'DIAMOND': 6,
+            'MASTER': 7,
+            'GRANDMASTER': 8,
+            'CHALLENGER': 9
+        }
+        if rank_tiers[summoner_1.solo_tier] > rank_tiers[summoner_1.flex_tier]:
+            return summoner_1.solo_tier
+        else:
+            return summoner_1.flex_tier
 
 # ==========================================================================================
 #       All Champions Gui: List of all champion stats from the current season
@@ -420,6 +452,8 @@ class Summoner:
                     self.solo_veteran = self.ranked_data[i]['veteran']
                     self.solo_inactive = self.ranked_data[i]['inactive']
                     self.solo_fresh_blood = self.ranked_data[i]['freshBlood']
+                    self.solo_hot_streak = self.ranked_data[i]['hotStreak']
+
                 else:
                     self.flex_tier = self.ranked_data[i]['tier']
                     self.flex_rank = self.ranked_data[i]['rank']

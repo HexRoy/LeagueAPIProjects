@@ -124,6 +124,12 @@ GuiManager:
     profile_summoner_name: profileSummonerName
     profile_solo_rank: profileSoloRank
     profile_flex_rank: profileFlexRank
+    profile_rank_icon: profileRankIcon
+    profile_region :profileRegion
+    profile_solo_win_loss: profileSoloWinLoss
+    profile_flex_win_loss: profileFlexWinLoss
+    profile_match_history: profileMatchHistory
+
     canvas:
         Rectangle:
             pos: self.pos
@@ -140,16 +146,142 @@ GuiManager:
                 app.root.transition.direction = "right"
 
 
-        Label:
-            id: profileSummonerName
-            pos_hint: {"x": -.40, "y": .30}
-            text: ""
-        Label:
-            id: profileSoloRank
-            pos_hint: {"x": -.40, "y": .25}
-            text: ""
-        Label:
-            id: profileFlexRank
-            pos_hint: {"x": -.40, "y": .20}
-            text: ""
+        GridLayout:
+            cols: 3
+            size_hint: .3, .2
+            pos_hint: {'top': 0.8}
+            col_default_width: self.width
+
+            Label:
+                id: profileRegion
+                canvas.before:
+                    Color:
+                        rgba: 0, 0, 0, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+            Label:
+                id: profileSummonerName
+                canvas.before:
+                    Color:
+                        rgba: 0, 0, 0, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+            Image:
+                id: profileRankIcon
+                canvas.before:
+                    Color:
+                        rgba: 0, 0, 0, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+
+
+            Label:
+                text: "Solo Rank"
+                canvas.before:
+                    Color:
+                        rgba: 0, 0, 0, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+            Label:
+                id: profileSoloRank
+                canvas.before:
+                    Color:
+                        rgba: 1, .5, 0, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+            Label:
+                id: profileSoloWinLoss
+                canvas.before:
+                    Color:
+                        rgba: 1, .5, 0, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+
+            Label:
+                text: "Flex Rank"
+                canvas.before:
+                    Color:
+                        rgba: 0, 0, 0, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+            Label:
+                id: profileFlexRank
+                canvas.before:
+                    Color:
+                        rgba: 1, .5, 0, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+            Label:
+                id: profileFlexWinLoss
+                canvas.before:
+                    Color:
+                        rgba: 1, .5, 0, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+
+        # Match History Scroll view
+        ScrollView:
+            pos_hint: {"bottom": .2, "x": .03}
+            size_hint: .4, .5
+            GridLayout:
+                id: profileMatchHistory
+                cols: 2
+                height: self.minimum_height
+                size_hint: None, None
+
+                Button:
+                    text: 'test'
+                    size_hint: None, None
+                    height: self.height
+                    width: self.width
+                Button:
+                    text: 'test'
+                    size_hint: None, None
+                    height: self.height
+                    width: self.width
+                Button:
+                    text: 'test'
+                    size_hint: None, None
+                    height: self.height
+                    width: self.width
+                Button:
+                    text: 'test'
+                    size_hint: None, None
+                    height: self.height
+                    width: self.width
+                Button:
+                    text: 'test'
+                    size_hint: None, None
+                    height: self.height
+                    width: self.width
+                Button:
+                    text: 'test'
+                    size_hint: None, None
+                    height: self.height
+                    width: self.width
+                Button:
+                    text: 'test'
+                    size_hint: None, None
+                    height: self.height
+                    width: self.width
+                Button:
+                    text: 'test'
+                    size_hint: None, None
+                    height: self.height
+                    width: self.width
+
+
+
+
+
+
 
