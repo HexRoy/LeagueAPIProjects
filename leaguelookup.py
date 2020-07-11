@@ -9,16 +9,16 @@ from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.popup import Popup
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.button import Button
-from kivy.uix.togglebutton import ToggleButton
 from kivy.lang import Builder
 import requests
 import pandas
 import os
 from functools import partial
 from kivy.clock import Clock
+import json
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-f4105a2f-5d00-43ba-ad76-ec38bd76b795"
+DevelopmentAPIKey = "RGAPI-fdf18ae7-3564-43b4-8cf4-366d52c53e13"
 
 # Todo
 #   Add a settings tab
@@ -31,6 +31,7 @@ DevelopmentAPIKey = "RGAPI-f4105a2f-5d00-43ba-ad76-ec38bd76b795"
 #   CRASH : when searching a summoner without a rank, need to add an if case to summoner_1.set_ranked_data
 #   Fix transition directions
 #   Challenger rank not needed: Challenger I
+#   Add two grid layouts in profile view one for flex one for solo
 
 # ==========================================================================================
 #       Home Screen: Contains summoner lookup, region selection, and favorites
@@ -190,11 +191,11 @@ class HomeGui(Screen):
         df = pandas.read_csv('favorites.csv')
         for index, line in df.iterrows():
             summoner_button = Button(text=line['name'] + "  :  " + line['region'], size_hint=(None, None),
-                                     height=self.height / 8, width=self.width / 3.5)
+                                     height=self.height / 10, width=self.width / 3.5)
             summoner_button.bind(on_press=partial(self.history_search))
 
             favorite_button = Button(background_normal="images/goldstar.png", background_down="images/blackstar.png",
-                                     size_hint=(None, None), height=self.height / 8, width=self.width / 10,
+                                     size_hint=(None, None), height=self.height / 10, width=self.width / 10,
                                      id=str(index))
             favorite_button.bind(on_press=partial(self.remove_favorites))
 
@@ -256,12 +257,11 @@ class HomeGui(Screen):
 
         df = pandas.read_csv('history.csv')
         for index, line in df.iterrows():
-            summoner_button = Button(text=line['name']+"  :  "+line['region'], size_hint=(None, None), height=self.height/8, width=self.width/3.5)
+            summoner_button = Button(text=line['name']+"  :  "+line['region'], size_hint=(None, None), height=self.height/10, width=self.width/3.5)
             summoner_button.bind(on_press=partial(self.history_search))
 
-            favorite_button = Button(background_normal="images/blackstar.png", background_down="images/goldstar.png", size_hint=(None, None), height=self.height/8, width=self.width/10, id=str(index))
+            favorite_button = Button(background_normal="images/blackstar.png", background_down="images/goldstar.png", size_hint=(None, None), height=self.height/10, width=self.width/10, id=str(index))
             favorite_button.bind(on_press=partial(self.remove_history))
-
 
             self.history_grid_layout.add_widget(summoner_button)
             self.history_grid_layout.add_widget(favorite_button)
@@ -329,38 +329,53 @@ class ProfileGui(Screen):
         :return:
         """
         self.profile_summoner_name.text = summoner_1.name
-        self.profile_rank_icon.source = 'images/ranks/Emblem_' + self.get_better_rank() + '.png'
-        self.profile_region.text = summoner_1.region
 
+        self.profile_solo_rank_icon.source = 'images/ranks/Emblem_' + summoner_1.solo_tier + '.png'
         solo_rank = summoner_1.solo_tier + " " + summoner_1.solo_rank + " " + str(summoner_1.solo_league_points) + " LP"
         self.profile_solo_rank.text = solo_rank
         self.profile_solo_win_loss.text = 'W/L: ' + str(summoner_1.solo_wins) + "/" + str(summoner_1.solo_losses)
 
+        self.profile_flex_rank_icon.source = 'images/ranks/Emblem_' + summoner_1.flex_tier+ '.png'
         flex_rank = summoner_1.flex_tier + " " + summoner_1.flex_rank + " " + str(summoner_1.flex_league_points) + " LP"
         self.profile_flex_rank.text = flex_rank
         self.profile_flex_win_loss.text = 'W/L: ' + str(summoner_1.flex_wins) + "/" + str(summoner_1.flex_losses)
 
-    @staticmethod
-    def get_better_rank():
+        self.populate_match_history()
+
+    def populate_match_history(self):
         """
-        get_better_rank: returns the better rank, either flex rank or solo rank
+        populate_match_history: populates the match history grid, with most recent 20 games
         :return:
         """
-        rank_tiers = {
-            'IRON': 1,
-            'BRONZE': 2,
-            'SILVER': 3,
-            'GOLD': 4,
-            'PLATINUM': 5,
-            'DIAMOND': 6,
-            'MASTER': 7,
-            'GRANDMASTER': 8,
-            'CHALLENGER': 9
-        }
-        if rank_tiers[summoner_1.solo_tier] > rank_tiers[summoner_1.flex_tier]:
-            return summoner_1.solo_tier
-        else:
-            return summoner_1.flex_tier
+        url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/"+ summoner_1.account_id +"?endIndex=20&api_key=" + DevelopmentAPIKey
+        match_history = requests.get(url)
+        match_history = match_history.json()
+        print(match_history)
+
+        # champion_data = open('data_dragon_9.3.1/champion.json')
+        # json_champion_data = json.loads(champion_data)
+
+        #jdata = json.loads(open('data_dragon_9.3.1/champion.json').read())
+
+        for match in match_history['matches']:
+            print(match)
+
+            view_button = Button(text="View Match", size_hint=(None, None), height=self.height/8, width=self.width, id=str(match['gameId']))
+            view_button.bind(on_press=partial(self.match_search))
+            self.profile_match_history.add_widget(view_button)
+
+    def match_search(self, button):
+        self.parent.current = "match"
+
+
+# ==========================================================================================
+#       Match Gui: Statistics about a specific game
+# ==========================================================================================
+class MatchGui(Screen):
+    def __init__(self, **kwargs):
+        super(Screen, self).__init__(**kwargs)
+        self.name = 'match'
+
 
 # ==========================================================================================
 #       All Champions Gui: List of all champion stats from the current season

@@ -1,6 +1,7 @@
 GuiManager:
     HomeGui:
     ProfileGui:
+    MatchGui:
     #AllChampionsGui:
     #SingleChampionGui:
 
@@ -64,7 +65,7 @@ GuiManager:
         # Todo just for test can delete
         Button:
             text: "Refresh"
-            pos_hint: {'y': .5, 'x': .4}
+            pos_hint: {'x': .4}
             size_hint: .15 , .075
             on_press:
                 root.populate_history()
@@ -122,12 +123,15 @@ GuiManager:
 <ProfileGui>:
     name: "profile"
     profile_summoner_name: profileSummonerName
+
     profile_solo_rank: profileSoloRank
-    profile_flex_rank: profileFlexRank
-    profile_rank_icon: profileRankIcon
-    profile_region :profileRegion
+    profile_solo_rank_icon: profileSoloRankIcon
     profile_solo_win_loss: profileSoloWinLoss
+
+    profile_flex_rank: profileFlexRank
     profile_flex_win_loss: profileFlexWinLoss
+    profile_flex_rank_icon: profileFlexRankIcon
+
     profile_match_history: profileMatchHistory
 
     canvas:
@@ -144,24 +148,19 @@ GuiManager:
             on_release:
                 app.root.current = "home"
                 app.root.transition.direction = "right"
+        Label:
+            id: profileSummonerName
+            font_size: (int(self.height/15) + int(self.width/15)) / 2
+            pos_hint: {'y': 0.25}
 
-
+        # Solo Rank Grid Layout
         GridLayout:
-            cols: 3
+            cols: 1
             size_hint: .3, .2
-            pos_hint: {'top': 0.8}
+            pos_hint: {'top': 0.8, 'x': .05}
             col_default_width: self.width
-
             Label:
-                id: profileRegion
-                canvas.before:
-                    Color:
-                        rgba: 0, 0, 0, 1
-                    Rectangle:
-                        pos: self.pos
-                        size: self.size
-            Label:
-                id: profileSummonerName
+                text: "Solo Rank"
                 canvas.before:
                     Color:
                         rgba: 0, 0, 0, 1
@@ -169,17 +168,7 @@ GuiManager:
                         pos: self.pos
                         size: self.size
             Image:
-                id: profileRankIcon
-                canvas.before:
-                    Color:
-                        rgba: 0, 0, 0, 1
-                    Rectangle:
-                        pos: self.pos
-                        size: self.size
-
-
-            Label:
-                text: "Solo Rank"
+                id: profileSoloRankIcon
                 canvas.before:
                     Color:
                         rgba: 0, 0, 0, 1
@@ -203,8 +192,23 @@ GuiManager:
                         pos: self.pos
                         size: self.size
 
+        # Flex Rank Grid Layout
+        GridLayout:
+            cols: 1
+            size_hint: .3, .2
+            pos_hint: {'top': 0.8, 'x': 0.65}
+            col_default_width: self.width
+            row_default_height: self.minimum_height
             Label:
                 text: "Flex Rank"
+                canvas.before:
+                    Color:
+                        rgba: 0, 0, 0, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+            Image:
+                id: profileFlexRankIcon
                 canvas.before:
                     Color:
                         rgba: 0, 0, 0, 1
@@ -230,58 +234,30 @@ GuiManager:
 
         # Match History Scroll view
         ScrollView:
-            pos_hint: {"bottom": .2, "x": .03}
-            size_hint: .4, .5
+            pos_hint: {"bottom": .2}
+            size_hint: 1, .5
             GridLayout:
                 id: profileMatchHistory
-                cols: 2
+                cols: 1
                 height: self.minimum_height
                 size_hint: None, None
 
-                Button:
-                    text: 'test'
-                    size_hint: None, None
-                    height: self.height
-                    width: self.width
-                Button:
-                    text: 'test'
-                    size_hint: None, None
-                    height: self.height
-                    width: self.width
-                Button:
-                    text: 'test'
-                    size_hint: None, None
-                    height: self.height
-                    width: self.width
-                Button:
-                    text: 'test'
-                    size_hint: None, None
-                    height: self.height
-                    width: self.width
-                Button:
-                    text: 'test'
-                    size_hint: None, None
-                    height: self.height
-                    width: self.width
-                Button:
-                    text: 'test'
-                    size_hint: None, None
-                    height: self.height
-                    width: self.width
-                Button:
-                    text: 'test'
-                    size_hint: None, None
-                    height: self.height
-                    width: self.width
-                Button:
-                    text: 'test'
-                    size_hint: None, None
-                    height: self.height
-                    width: self.width
+# ==========================================================================================
+#       Match Gui: Contains summoner lookup, region selection, and favorites
+# ==========================================================================================
+<MatchGui>:
+    name: 'match'
+    canvas:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            source: "images/background.png"
 
-
-
-
-
-
-
+    FloatLayout:
+        Button:
+            pos_hint: {"top":1}
+            size_hint: 1, .15
+            background_normal: "images/logo.png"
+            on_release:
+                app.root.current = "home"
+                app.root.transition.direction = "right"
