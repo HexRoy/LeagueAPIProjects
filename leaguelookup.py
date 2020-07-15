@@ -132,7 +132,6 @@ class HomeGui(Screen):
         """
 
         name, region = button.text.split("  :  ")
-        print(" i did it bitcch ", name, region)
         # URL to lookup a summoners basic data
         url = "https://" + region + ".api.riotgames.com/lol/summoner/v4/summoners/by-name/" + \
               name + "?api_key=" + DevelopmentAPIKey
@@ -422,9 +421,9 @@ class ProfileGui(Screen):
                     rune_1 = None
                     rune_2 = None
                     rune_3 = None
-
                     win = players['stats']['win']
-
+                    largest_multikill = players['stats']['largestMultiKill']
+                    largest_killingspree = players['stats']['largestKillingSpree']
                     kills = players['stats']['kills']
                     deaths = players['stats']['deaths']
                     assists = players['stats']['assists']
@@ -434,8 +433,10 @@ class ProfileGui(Screen):
                         calculated_kda = "Infinite"
                     else:
                         calculated_kda = round(((kills + assists) / deaths), 2)
+                    cs = players['stats']['totalMinionsKilled'] + players['stats']['neutralMinionsKilled']
+                    cs_per_minute = round(cs/minutes, 1)
 
-                    kda_label = Label(text="Level: " + str(champion_level) + "\n" + kda + "\nKDA: " + str(calculated_kda), size_hint=(None, None), height=self.height/8)
+                    kda_label = Label(text="Level: " + str(champion_level) + "\n" + kda + "\nKDA: " + str(calculated_kda) + "\nCS: " + str(cs) + " (" + str(cs_per_minute) + ")", size_hint=(None, None), height=self.height/8)
                     self.profile_match_history.add_widget(kda_label)
 
                     item_grid_layout = GridLayout(cols=3)
@@ -466,9 +467,10 @@ class ProfileGui(Screen):
                             break
                         except ValueError:
                             pass
-
                     spell_1_name = spell1
                     spell_2_name = spell2
+
+                    # Adds spells and ward icon to match history
                     spell_grid_layout = GridLayout(cols=3)
                     ward_image = Image(source='data_dragon_10.14.1/10.14.1/img/item/' + str(players['stats']['item6']) + ".png", size_hint=(None, None), width=self.width / 14, height=self.height / 17)
                     spell1_image = Image(source='data_dragon_10.14.1/10.14.1/img/spell/' + spell_1_name + ".png", size_hint=(None, None), width=self.width / 14, height=self.height / 17)
@@ -477,6 +479,7 @@ class ProfileGui(Screen):
                     spell_grid_layout.add_widget(spell1_image)
                     spell_grid_layout.add_widget(spell2_image)
                     self.profile_match_history.add_widget(spell_grid_layout)
+
 
                     break
 
