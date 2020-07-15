@@ -20,13 +20,12 @@ Otherwise, install:
 * 3.Install kivy:
 	python -m pip install kivy==1.11.1
 	
-Sample GUI
- ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/Sample%20GUI.png)
+##Home GUI
+ ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/homegui.png)
+
+ * Summoner search bar, with a scrollable region select
+ * Search favorites and search history 
  
- ### Things I want:
- * Search user
- history
- favourites
  
 
  * Users Profile

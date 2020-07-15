@@ -21,7 +21,7 @@ from kivy.clock import Clock
 import json
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-3e90594d-5244-4f9d-83c9-ee5c52211206"
+DevelopmentAPIKey = "RGAPI-9ad44646-c9f4-4b5f-a12b-51529e5d42ac"
 
 # Todo
 #   Add a settings tab
@@ -415,8 +415,8 @@ class ProfileGui(Screen):
                     print(players['stats'])
 
                     # TODO convert ids to name/get icon --> datadragon summoner
-                    spell_1 = players['spell1Id']
-                    spell_2 = players['spell2Id']
+                    spell_1_id = players['spell1Id']
+                    spell_2_id = players['spell2Id']
                     keystone_primary = None
                     keystone_secondary = None
                     rune_1 = None
@@ -428,19 +428,56 @@ class ProfileGui(Screen):
                     kills = players['stats']['kills']
                     deaths = players['stats']['deaths']
                     assists = players['stats']['assists']
+                    champion_level = players['stats']['champLevel']
                     kda = ("%d/%d/%d" % (kills, deaths, assists))
-                    kda_label = Label(text=kda, size_hint=(None, None), height=self.height/8)
+                    if deaths == 0:
+                        calculated_kda = "Infinite"
+                    else:
+                        calculated_kda = round(((kills + assists) / deaths), 2)
+
+                    kda_label = Label(text="Level: " + str(champion_level) + "\n" + kda + "\nKDA: " + str(calculated_kda), size_hint=(None, None), height=self.height/8)
                     self.profile_match_history.add_widget(kda_label)
 
-                    item_grid_layout = GridLayout(cols=3, spacing=0)
+                    item_grid_layout = GridLayout(cols=3)
                     for i in range(6):
                         item = players['stats']['item%d' % i]
                         if item == 0:
                             pass
                         else:
-                            item_image = Image(source='data_dragon_10.14.1/10.14.1/img/item/' + str(item) + ".png", size_hint=(None, None), width=self.width/14, height=self.height/16)
+                            item_image = Image(source='data_dragon_10.14.1/10.14.1/img/item/' + str(item) + ".png", size_hint=(None, None), width=self.width/14, height=self.height/17)
                             item_grid_layout.add_widget(item_image)
                     self.profile_match_history.add_widget(item_grid_layout)
+
+                    # Opens the summoner spells json file
+                    with open('data_dragon_10.14.1/10.14.1/data/en_US/summoner.json', 'r', encoding="utf-8") as summoner_spells:
+                        spell_dict = json.load(summoner_spells)
+
+                    # Finds spell 1
+                    for spell1 in spell_dict['data']:
+                        try:
+                            test = list(spell_dict['data'][spell1].keys())[list(spell_dict['data'][spell1].values()).index(str(spell_1_id))]
+                            break
+                        except ValueError:
+                            pass
+                    # Finds spell 2
+                    for spell2 in spell_dict['data']:
+                        try:
+                            test = list(spell_dict['data'][spell2].keys())[list(spell_dict['data'][spell2].values()).index(str(spell_2_id))]
+                            break
+                        except ValueError:
+                            pass
+
+                    spell_1_name = spell1
+                    spell_2_name = spell2
+                    spell_grid_layout = GridLayout(cols=3)
+                    ward_image = Image(source='data_dragon_10.14.1/10.14.1/img/item/' + str(players['stats']['item6']) + ".png", size_hint=(None, None), width=self.width / 14, height=self.height / 17)
+                    spell1_image = Image(source='data_dragon_10.14.1/10.14.1/img/spell/' + spell_1_name + ".png", size_hint=(None, None), width=self.width / 14, height=self.height / 17)
+                    spell2_image = Image(source='data_dragon_10.14.1/10.14.1/img/spell/' + spell_2_name + ".png", size_hint=(None, None), width=self.width / 14, height=self.height / 17)
+                    spell_grid_layout.add_widget(ward_image)
+                    spell_grid_layout.add_widget(spell1_image)
+                    spell_grid_layout.add_widget(spell2_image)
+                    self.profile_match_history.add_widget(spell_grid_layout)
+
                     break
 
 
