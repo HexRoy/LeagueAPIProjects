@@ -9,6 +9,9 @@ from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.popup import Popup
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.button import Button
+from kivy.uix.label import Label
+from kivy.uix.image import Image
+from kivy.uix.gridlayout import GridLayout
 from kivy.lang import Builder
 import requests
 import pandas
@@ -18,7 +21,7 @@ from kivy.clock import Clock
 import json
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-fdf18ae7-3564-43b4-8cf4-366d52c53e13"
+DevelopmentAPIKey = "RGAPI-3e90594d-5244-4f9d-83c9-ee5c52211206"
 
 # Todo
 #   Add a settings tab
@@ -31,7 +34,7 @@ DevelopmentAPIKey = "RGAPI-fdf18ae7-3564-43b4-8cf4-366d52c53e13"
 #   CRASH : when searching a summoner without a rank, need to add an if case to summoner_1.set_ranked_data
 #   Fix transition directions
 #   Challenger rank not needed: Challenger I
-#   Add two grid layouts in profile view one for flex one for solo
+#   Add three buttons in profile view one for flex one for solo one for champions
 
 # ==========================================================================================
 #       Home Screen: Contains summoner lookup, region selection, and favorites
@@ -108,10 +111,16 @@ class HomeGui(Screen):
                 self.summoner_name.text = ""
                 self.add_history()
                 self.parent.current = "profile"
+            # API Key out of data
+            elif code == 403:
+                popup = InvalidSearchPopup()
+                popup.open_popup_4()
+                print("API Key Outdated")
             # Gives the invalid search popup
             else:
                 popup = InvalidSearchPopup()
                 popup.open_popup_3()
+                print(code)
                 print("no summoner " + self.summoner_name.text + " found in region: " + region)
 
     def history_search(self, button):
@@ -123,7 +132,7 @@ class HomeGui(Screen):
         """
 
         name, region = button.text.split("  :  ")
-        print(" i did it bitcch ",name,region)
+        print(" i did it bitcch ", name, region)
         # URL to lookup a summoners basic data
         url = "https://" + region + ".api.riotgames.com/lol/summoner/v4/summoners/by-name/" + \
               name + "?api_key=" + DevelopmentAPIKey
@@ -131,16 +140,24 @@ class HomeGui(Screen):
         summoner_data = url_data.json()
         summoner_1.summoner_data = summoner_data
 
-        # All data for summoner lookup
-        summoner_1.region = region
-        summoner_1.set_summoner_data()
-        summoner_1.set_ranked_data()
+        code = url_data.status_code
 
-        #todo test print
-        summoner_1.print_all()
+        # API Key out of data
+        if code == 403:
+            popup = InvalidSearchPopup()
+            popup.open_popup_4()
+            print("API Key Outdated")
+        else:
+            # All data for summoner lookup
+            summoner_1.region = region
+            summoner_1.set_summoner_data()
+            summoner_1.set_ranked_data()
 
-        self.add_history()
-        self.parent.current = "profile"
+            #todo test print
+            summoner_1.print_all()
+
+            self.add_history()
+            self.parent.current = "profile"
 
 
     def add_favorite(self, name, region):
@@ -272,6 +289,7 @@ class HomeGui(Screen):
 #           Types:  1 = No region selected
 #                   2 = No summoner name input
 #                   3 = Bad search: the combination is not found
+#                   4 = API Key is outdated
 # ==========================================================================================
 class InvalidSearchPopup(FloatLayout):
     # Variables pulled from from <HomeGui> leaguelookup.kv
@@ -303,6 +321,14 @@ class InvalidSearchPopup(FloatLayout):
         :return:
         """
         self.popup_label.text = "Summoner not found"
+        self.popup.open()
+
+    def open_popup_4(self):
+        """
+        open_popup_4: opens the api key outdated popup
+        :return:
+        """
+        self.popup_label.text = "API Key Outdated"
         self.popup.open()
 
     def close_popup(self):
@@ -347,22 +373,78 @@ class ProfileGui(Screen):
         populate_match_history: populates the match history grid, with most recent 20 games
         :return:
         """
+        self.profile_match_history.clear_widgets()
+
         url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/"+ summoner_1.account_id +"?endIndex=20&api_key=" + DevelopmentAPIKey
         match_history = requests.get(url)
         match_history = match_history.json()
-        print(match_history)
-
-        # champion_data = open('data_dragon_9.3.1/champion.json')
-        # json_champion_data = json.loads(champion_data)
-
-        #jdata = json.loads(open('data_dragon_9.3.1/champion.json').read())
 
         for match in match_history['matches']:
-            print(match)
-
-            view_button = Button(text="View Match", size_hint=(None, None), height=self.height/8, width=self.width, id=str(match['gameId']))
+            view_button = Button(text="View Match", size_hint=(None, None), height=self.height/8, width=self.width/9, id=str(match['gameId']))
             view_button.bind(on_press=partial(self.match_search))
             self.profile_match_history.add_widget(view_button)
+
+            # Gets the champions that is played in the game
+            with open('data_dragon_10.14.1/10.14.1/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
+                champion_dict = json.load(champion_data)
+
+            for champion in champion_dict['data']:
+                try:
+                    test = list(champion_dict['data'][champion].keys())[list(champion_dict['data'][champion].values()).index(str(match['champion']))]
+                    break
+                except ValueError:
+                    pass
+
+            champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/'+champion+'.png', size_hint=(None, None), height=self.height/8)
+            self.profile_match_history.add_widget(champion_image)
+
+            # Obtains the matches data
+            url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matches/' + str(match['gameId']) +'?api_key=' + DevelopmentAPIKey
+            match_data = requests.get(url)
+            match_data = match_data.json()
+
+            # To get game length --> minutes:seconds
+            match_length = match_data['gameDuration']/60
+            minutes = int(match_length)
+            seconds = (match_length*60) % 60
+            time = ("%d:%02d" % (minutes, seconds))
+
+            for players in match_data['participants']:
+                if players['championId'] == match['champion']:
+
+                    print(players['stats'])
+
+                    # TODO convert ids to name/get icon --> datadragon summoner
+                    spell_1 = players['spell1Id']
+                    spell_2 = players['spell2Id']
+                    keystone_primary = None
+                    keystone_secondary = None
+                    rune_1 = None
+                    rune_2 = None
+                    rune_3 = None
+
+                    win = players['stats']['win']
+
+                    kills = players['stats']['kills']
+                    deaths = players['stats']['deaths']
+                    assists = players['stats']['assists']
+                    kda = ("%d/%d/%d" % (kills, deaths, assists))
+                    kda_label = Label(text=kda, size_hint=(None, None), height=self.height/8)
+                    self.profile_match_history.add_widget(kda_label)
+
+                    item_grid_layout = GridLayout(cols=3, spacing=0)
+                    for i in range(6):
+                        item = players['stats']['item%d' % i]
+                        if item == 0:
+                            pass
+                        else:
+                            item_image = Image(source='data_dragon_10.14.1/10.14.1/img/item/' + str(item) + ".png", size_hint=(None, None), width=self.width/14, height=self.height/16)
+                            item_grid_layout.add_widget(item_image)
+                    self.profile_match_history.add_widget(item_grid_layout)
+                    break
+
+
+
 
     def match_search(self, button):
         self.parent.current = "match"

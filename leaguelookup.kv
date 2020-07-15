@@ -234,11 +234,11 @@ GuiManager:
 
         # Match History Scroll view
         ScrollView:
-            pos_hint: {"bottom": .2}
+            pos_hint: {"bottom": .2, 'x':.01}
             size_hint: 1, .5
             GridLayout:
                 id: profileMatchHistory
-                cols: 1
+                cols: 4
                 height: self.minimum_height
                 size_hint: None, None
 
