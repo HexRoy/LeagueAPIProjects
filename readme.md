@@ -22,20 +22,21 @@ Otherwise, install:
 
 # LeagueLookup
 ## The Best League of Legends Analysis Tool
-1: [Home GUI](#home-gui)
-2: [Profile GUI](#profile-gui) 
-	
+1. [Home GUI](#home-gui)	
+* Summoner search bar, with a scrollable region select
+* Search favorites and search history 
+2. [Profile GUI](#profile-gui) 
+* Displays Solo/Flex ranks
+* Displays Win/Losses
+* Display a Match History
+
 
 	
 # Home GUI
  ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/homegui.png)
-* Summoner search bar, with a scrollable region select
-* Search favorites and search history 
+
 # Profile GUI
  ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/profilegui.png)
-* Displays Solo/Flex ranks
-* Displays Win/Losses
-* Display a Match History
 
  
 
