@@ -22,10 +22,14 @@ Otherwise, install:
 	
 ## Home GUI
  ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/homegui.png)
+* Summoner search bar, with a scrollable region select
+* Search favorites and search history 
+## Home GUI
+ ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/profilegui.png)
+* Displays Solo/Flex ranks
+* Displays Win/Losses
+* Display a Match History
 
- * Summoner search bar, with a scrollable region select
- * Search favorites and search history 
- 
  
 
  * Users Profile
