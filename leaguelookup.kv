@@ -231,6 +231,24 @@ GuiManager:
                     Rectangle:
                         pos: self.pos
                         size: self.size
+        Button:
+            text: "Live Game"
+            pos_hint: {'top': 0.585, 'x': 0.75}
+            size_hint: .15, .075
+        Button:
+            text: "Ranked: Solo"
+            pos_hint: {'top': 0.585, 'x': 0.5333}
+            size_hint: .15, .075
+        Button:
+            text: "Ranked Flex"
+            pos_hint: {'top': 0.585, 'x': 0.3166}
+            size_hint: .15, .075
+        Button:
+            text: "Champion Stats"
+            pos_hint: {'top': 0.585, 'x': 0.10}
+            size_hint: .15, .075
+
+
 
         # Match History Scroll view
         ScrollView:
@@ -238,15 +256,20 @@ GuiManager:
             size_hint: 1, .5
             GridLayout:
                 id: profileMatchHistory
-                cols: 5
+                cols: 6
                 height: self.minimum_height
                 size_hint: 1, None
+                spacing: 0 , 20
+
 
 # ==========================================================================================
 #       Match Gui: Contains summoner lookup, region selection, and favorites
 # ==========================================================================================
 <MatchGui>:
     name: 'match'
+    match_your_team_victory_status : matchYourTeamVictoryStatus
+    match_their_team_victory_status: matchTheirTeamVictoryStatus
+
     canvas:
         Rectangle:
             pos: self.pos
@@ -261,3 +284,85 @@ GuiManager:
             on_release:
                 app.root.current = "home"
                 app.root.transition.direction = "right"
+        # Your Teams Labels
+        Label:
+            id: matchYourTeamVictoryStatus
+            text: "Victory/Defeat"
+            font_size: (int(self.height/30) + int(self.width/30)) / 2
+            pos_hint: {'y': 0.25, 'x': -.45}
+        Label:
+            text: "Champion"
+            font_size: (int(self.height/30) + int(self.width/30)) / 2
+            pos_hint: {'y': 0.25, 'x': -.35}
+        Label:
+            text: "Rank"
+            font_size: (int(self.height/30) + int(self.width/30)) / 2
+            pos_hint: {'y': 0.25, 'x': -.25}
+        Label:
+            text: "KDA"
+            font_size: (int(self.height/30) + int(self.width/30)) / 2
+            pos_hint: {'y': 0.25, 'x': -.15}
+        Label:
+            text: "Damage"
+            font_size: (int(self.height/30) + int(self.width/30)) / 2
+            pos_hint: {'y': 0.25, 'x': -.05}
+        Label:
+            text: "Wards"
+            font_size: (int(self.height/30) + int(self.width/30)) / 2
+            pos_hint: {'y': 0.25, 'x': .05}
+        Label:
+            text: "CS"
+            font_size: (int(self.height/30) + int(self.width/30)) / 2
+            pos_hint: {'y': 0.25, 'x': .15}
+        Label:
+            text: "Items"
+            font_size: (int(self.height/30) + int(self.width/30)) / 2
+            pos_hint: {'y': 0.25, 'x': .25}
+        Label:
+            text: "Neutral Objectives"
+            font_size: (int(self.height/30) + int(self.width/30)) / 2
+            pos_hint: {'y': 0.25, 'x': .35}
+        Label:
+            text: "Towers"
+            font_size: (int(self.height/30) + int(self.width/30)) / 2
+            pos_hint: {'y': 0.25, 'x': .45}
+
+        # Your Teams Grid Layout
+
+
+
+
+        # Their Teams Labels
+        Label:
+            id: matchTheirTeamVictoryStatus
+            text: "Victory/Defeat"
+        Label:
+            text: "Champion"
+        Label:
+            text: "Rank"
+        Label:
+            text: "KDA"
+        Label:
+            text: "Damage"
+        Label:
+            text: "Wards"
+        Label:
+            text: "CS"
+        Label:
+            text: "Items"
+        Label:
+            text: "Neutral Objectives"
+        Label
+            text: "Towers"
+
+
+
+
+
+
+        Button:
+            pos_hint: {"bottom":.5}
+            size_hint: 1, .15
+            text: "Back"
+            on_release:
+                app.root.current = "profile"

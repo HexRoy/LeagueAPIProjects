@@ -21,20 +21,39 @@ from kivy.clock import Clock
 import json
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-9ad44646-c9f4-4b5f-a12b-51529e5d42ac"
+DevelopmentAPIKey = "RGAPI-c05228ed-0a6c-430e-8910-bc5adc874246"
 
 # Todo
 #   Add a settings tab
 #       choose default region
 #       reorder favorites
 #       color scheme
+#   Home GUI
+#       Add nicer buttons
+#       Add nicer text
+#       Remove refresh button (add it into profile gui to update match history)
 #   Profiles GUI
-#   Don't rewrite all data to summoner 1 until you need it in the next class, only rewrite json
-#   Add rank to the summoner name button
+#       Don't rewrite all data to summoner 1 until you need it in the next class, only rewrite json
+#       Add rank to the summoner name button
+#       Add star to remove/ add to favorites
+#       Add variable spacing between widgets in match history scroll view, currently set to 20
+#   Match GUI
+#       Add view summoner button next to other summoners in the game
+#   Ranked: solo
+#       Match history of ranked solo games
+#   Ranked: flex
+#        Match history of ranked flex games
+#   Champions
+#       Scroll view of all champions that you have played win rates
+#   Single Champion
+#       win rates on one champion vs every champion you have played against
+#   Live Game
 #   CRASH : when searching a summoner without a rank, need to add an if case to summoner_1.set_ranked_data
-#   Fix transition directions
+#       IF no rank, display the summoner level instead
+#   CRASH : something to do with time duration of a match (possibly aram games have a different variable)
+#   Fix transition directions for each screen
 #   Challenger rank not needed: Challenger I
-#   Add three buttons in profile view one for flex one for solo one for champions
+
 
 # ==========================================================================================
 #       Home Screen: Contains summoner lookup, region selection, and favorites
@@ -104,10 +123,6 @@ class HomeGui(Screen):
                 summoner_1.region = region
                 summoner_1.set_summoner_data()
                 summoner_1.set_ranked_data()
-
-                # todo test print
-                summoner_1.print_all()
-
                 self.summoner_name.text = ""
                 self.add_history()
                 self.parent.current = "profile"
@@ -151,13 +166,8 @@ class HomeGui(Screen):
             summoner_1.region = region
             summoner_1.set_summoner_data()
             summoner_1.set_ranked_data()
-
-            #todo test print
-            summoner_1.print_all()
-
             self.add_history()
             self.parent.current = "profile"
-
 
     def add_favorite(self, name, region):
         """
@@ -198,7 +208,6 @@ class HomeGui(Screen):
         :return:
         """
         self.favorites_grid_layout.clear_widgets()
-        print("POPULATING")
         if not os.path.isfile('favorites.csv'):
             new_entry = pandas.DataFrame({'name': ['HexRoy'],
                                           'region': ['NA1']})
@@ -340,8 +349,6 @@ class InvalidSearchPopup(FloatLayout):
 
 # ==========================================================================================
 #       Profile Gui: Overview of the searched summoner. Rank, win rate, match history
-# Todo
-#   Add favorite star to remove/add to favorites from their profile
 # ==========================================================================================
 class ProfileGui(Screen):
     def __init__(self, **kwargs):
@@ -351,21 +358,26 @@ class ProfileGui(Screen):
     def on_enter(self):
         """
         on_enter: Determines what happens upon entering the screen "Profile"
+        If we are entering the same profile that is already loaded, do nothing
+        Otherwise load the new profile
         :return:
         """
-        self.profile_summoner_name.text = summoner_1.name
+        if self.profile_summoner_name.text == summoner_1.name:
+            pass
+        else:
+            self.profile_summoner_name.text = summoner_1.name
 
-        self.profile_solo_rank_icon.source = 'images/ranks/Emblem_' + summoner_1.solo_tier + '.png'
-        solo_rank = summoner_1.solo_tier + " " + summoner_1.solo_rank + " " + str(summoner_1.solo_league_points) + " LP"
-        self.profile_solo_rank.text = solo_rank
-        self.profile_solo_win_loss.text = 'W/L: ' + str(summoner_1.solo_wins) + "/" + str(summoner_1.solo_losses)
+            self.profile_solo_rank_icon.source = 'images/ranks/Emblem_' + summoner_1.solo_tier + '.png'
+            solo_rank = summoner_1.solo_tier + " " + summoner_1.solo_rank + " " + str(summoner_1.solo_league_points) + " LP"
+            self.profile_solo_rank.text = solo_rank
+            self.profile_solo_win_loss.text = 'W/L: ' + str(summoner_1.solo_wins) + "/" + str(summoner_1.solo_losses)
 
-        self.profile_flex_rank_icon.source = 'images/ranks/Emblem_' + summoner_1.flex_tier+ '.png'
-        flex_rank = summoner_1.flex_tier + " " + summoner_1.flex_rank + " " + str(summoner_1.flex_league_points) + " LP"
-        self.profile_flex_rank.text = flex_rank
-        self.profile_flex_win_loss.text = 'W/L: ' + str(summoner_1.flex_wins) + "/" + str(summoner_1.flex_losses)
+            self.profile_flex_rank_icon.source = 'images/ranks/Emblem_' + summoner_1.flex_tier + '.png'
+            flex_rank = summoner_1.flex_tier + " " + summoner_1.flex_rank + " " + str(summoner_1.flex_league_points) + " LP"
+            self.profile_flex_rank.text = flex_rank
+            self.profile_flex_win_loss.text = 'W/L: ' + str(summoner_1.flex_wins) + "/" + str(summoner_1.flex_losses)
 
-        self.populate_match_history()
+            self.populate_match_history()
 
     def populate_match_history(self):
         """
@@ -401,6 +413,9 @@ class ProfileGui(Screen):
             url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matches/' + str(match['gameId']) +'?api_key=' + DevelopmentAPIKey
             match_data = requests.get(url)
             match_data = match_data.json()
+
+            # TODO remove
+            print("match data", match_data)
 
             # To get game length --> minutes:seconds
             match_length = match_data['gameDuration']/60
@@ -445,7 +460,7 @@ class ProfileGui(Screen):
                         if item == 0:
                             pass
                         else:
-                            item_image = Image(source='data_dragon_10.14.1/10.14.1/img/item/' + str(item) + ".png", size_hint=(None, None), width=self.width/14, height=self.height/17)
+                            item_image = Image(source='data_dragon_10.14.1/10.14.1/img/item/' + str(item) + ".png",allow_stretch=True, keep_ratio=False, size_hint=(None, None), width=self.width/14, height=self.height/17)
                             item_grid_layout.add_widget(item_image)
                     self.profile_match_history.add_widget(item_grid_layout)
 
@@ -471,22 +486,26 @@ class ProfileGui(Screen):
                     spell_2_name = spell2
 
                     # Adds spells and ward icon to match history
-                    spell_grid_layout = GridLayout(cols=3)
-                    ward_image = Image(source='data_dragon_10.14.1/10.14.1/img/item/' + str(players['stats']['item6']) + ".png", size_hint=(None, None), width=self.width / 14, height=self.height / 17)
-                    spell1_image = Image(source='data_dragon_10.14.1/10.14.1/img/spell/' + spell_1_name + ".png", size_hint=(None, None), width=self.width / 14, height=self.height / 17)
-                    spell2_image = Image(source='data_dragon_10.14.1/10.14.1/img/spell/' + spell_2_name + ".png", size_hint=(None, None), width=self.width / 14, height=self.height / 17)
+                    spell_grid_layout = GridLayout(cols=3, spacing=(.1, 0))
+                    ward_image = Image(source='data_dragon_10.14.1/10.14.1/img/item/' + str(players['stats']['item6']) + ".png",  keep_ratio=False, size_hint=(None, None), width=self.width / 14, height=self.height / 17)
+                    spell1_image = Image(source='data_dragon_10.14.1/10.14.1/img/spell/' + spell_1_name + ".png", allow_stretch=True, keep_ratio=False, size_hint=(None, None), width=self.width / 14, height=self.height / 17)
+                    spell2_image = Image(source='data_dragon_10.14.1/10.14.1/img/spell/' + spell_2_name + ".png", allow_stretch=True, keep_ratio=False, size_hint=(None, None), width=self.width / 14, height=self.height / 17)
                     spell_grid_layout.add_widget(ward_image)
                     spell_grid_layout.add_widget(spell1_image)
                     spell_grid_layout.add_widget(spell2_image)
                     self.profile_match_history.add_widget(spell_grid_layout)
 
-
+                    time_label = Label(text=str(time))
+                    self.profile_match_history.add_widget(time_label)
                     break
 
-
-
-
     def match_search(self, button):
+        """
+        match_search: used the match id added to the view button on creation to get more detailed match information
+        :param button: "view match" button
+        :return:
+        """
+        summoner_1.current_match_id = button.id
         self.parent.current = "match"
 
 
@@ -498,6 +517,28 @@ class MatchGui(Screen):
         super(Screen, self).__init__(**kwargs)
         self.name = 'match'
 
+    def on_enter(self, *args):
+        """
+        on_enter: Determines what happens when entering the MatchGUI page
+        :param args:
+        :return:
+        """
+        print(summoner_1.current_match_id)
+        # Obtains the matches data
+        url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matches/' + str(
+            summoner_1.current_match_id) + '?api_key=' + DevelopmentAPIKey
+        match_data = requests.get(url)
+        match_data = match_data.json()
+
+    def populate_match_data(self):
+        """
+        populate_match_data: adds all of the match data to the grid layout
+        :return:
+        """
+
+        # Todo: add labels on top of the grid layout
+        # Todo: add grid layout
+        pass
 
 # ==========================================================================================
 #       All Champions Gui: List of all champion stats from the current season
@@ -553,6 +594,8 @@ class Summoner:
         self.flex_inactive = None
         self.flex_fresh_blood = None
         self.flex_hot_streak = None
+
+        self.current_match_id = None
 
     def set_summoner_data(self):
         summoner_1.name = summoner_1.summoner_data['name']
@@ -633,6 +676,8 @@ class Summoner:
         print("flex_fresh_blood", self.flex_fresh_blood)
         print("flex_hot_streak", self.flex_hot_streak)
 
+        print("current_match_id", self.current_match_id)
+
 
 # ==========================================================================================
 #       The startup code
@@ -649,7 +694,3 @@ if __name__ == "__main__":
     leaguelookupApp().run()
 
 
-# Todo
-#   to add or remove summoner name from favorites for easy lookup
-#   implement add/remove favorite
-#   Add different errors to invalid lookup: no name/ region/ invalid
