@@ -34,10 +34,10 @@ Otherwise, install:
 	
 # Home GUI
  ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/homegui.png)
-[Table of contents](###table-of-contents)
+[Table of contents](#table-of-contents)
 # Profile GUI
  ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/profilegui.png)
-[Table of contents](###table-of-contents)
+[Table of contents](#table-of-contents)
 
  
 
