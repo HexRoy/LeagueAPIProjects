@@ -19,12 +19,19 @@ Otherwise, install:
 	python -m pip install kivy_deps.gstreamer==0.1.*
 * 3.Install kivy:
 	python -m pip install kivy==1.11.1
+
+# LeagueLookup
+## The Best League of Legends Analysis Tool
+1: [Home GUI](#home-gui)
+2: [Profile GUI](#profile-gui) 
 	
-## Home GUI
+
+	
+# Home GUI
  ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/homegui.png)
 * Summoner search bar, with a scrollable region select
 * Search favorites and search history 
-## Home GUI
+# Profile GUI
  ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/profilegui.png)
 * Displays Solo/Flex ranks
 * Displays Win/Losses
