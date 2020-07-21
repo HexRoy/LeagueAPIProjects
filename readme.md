@@ -44,21 +44,3 @@ Otherwise, install:
 # Profile GUI
  ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/profilegui.png)
 [Table of contents](#table-of-contents)
-
- 
-
- * Users Profile
- ranks
- mmr ?
- match history
- 
- 
- * Live Game
- match ups
- win percentages/ win percentages on and against those champs
- click on champs to get tips/ against then. your champ tips for them in mini popup
- 
- 
- * Champion overview 
- win rates on all champs (sortable by win rate/ games played/ kda/ farm)
- able to click any champion and see stats per champ (win rates vs. other champs)
