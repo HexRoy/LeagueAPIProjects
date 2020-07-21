@@ -1,4 +1,5 @@
-This repo contains some programs related to the riot game: Leauge of Legands
+# LeagueLookup
+## The Best League of Legends Analysis Tool
 
 Useful developer links:
 * https://developer.riotgames.com/apis
@@ -20,8 +21,7 @@ Otherwise, install:
 * 3.Install kivy:
 	python -m pip install kivy==1.11.1
 
-# LeagueLookup
-## The Best League of Legends Analysis Tool
+
 1. [Home GUI](#home-gui)	
 * Summoner search bar, with a scrollable region select
 * Search favorites and search history 
