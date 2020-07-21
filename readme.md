@@ -28,9 +28,15 @@ Otherwise, install:
 2. [Profile GUI](#profile-gui) 
 * Displays Solo/Flex ranks
 * Displays Win/Losses
-* Display a Match History
+* Scrollable match history containing Level, KDA, CS, items, game length
+* Able to view any match in further detail with 'View Match' button
 
-
+* Future Functionality: Champion Stats button, Ranked Flex button, Ranked Solo button, Live Game button
+3. Match GUI
+4. Champion GUI
+5. Ranked Flex GUI
+6. Ranked Solo GUI
+7. Live Game GUI
 	
 # Home GUI
  ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/homegui.png)
