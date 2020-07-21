@@ -21,7 +21,7 @@ Otherwise, install:
 * 3.Install kivy:
 	python -m pip install kivy==1.11.1
 
-
+### Table Of Contents
 1. [Home GUI](#home-gui)	
 * Summoner search bar, with a scrollable region select
 * Search favorites and search history 
@@ -34,9 +34,10 @@ Otherwise, install:
 	
 # Home GUI
  ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/homegui.png)
-
+[Table of contents](###table-of-contents)
 # Profile GUI
  ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/profilegui.png)
+[Table of contents](###table-of-contents)
 
  
 
