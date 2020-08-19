@@ -7,7 +7,10 @@ Useful developer links:
 * https://developer.riotgames.com/
 * https://kivy.org/doc/stable/
 
-This app is ran off of Kivy
+This app uses:
+* Kivy for the GUI
+* Cassiopeia a Python adaptation of the Riot Games League of Legends API:
+Jason Maldonis, Rob Rua, Eric Carmichael, Johannes Christ, Anton Pohli, Francesco Zoffoli, … Alex Palmer. (2019, November 1). meraki-analytics/cassiopeia: v4.0.5 (Version v4.0.5). Zenodo. http://doi.org/10.5281/zenodo.3524689
 ---------------------------------
 If you need to update Kivy:
 python -m pip uninstall -y kivy.deps.glew kivy.deps.gstreamer kivy.deps.sdl2 kivy.deps.angle

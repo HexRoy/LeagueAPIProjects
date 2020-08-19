@@ -267,8 +267,7 @@ GuiManager:
 # ==========================================================================================
 <MatchGui>:
     name: 'match'
-    match_your_team_victory_status : matchYourTeamVictoryStatus
-    match_their_team_victory_status: matchTheirTeamVictoryStatus
+    match_grid_layout: matchGridLayout
 
     canvas:
         Rectangle:
@@ -284,81 +283,38 @@ GuiManager:
             on_release:
                 app.root.current = "home"
                 app.root.transition.direction = "right"
-        # Your Teams Labels
-        Label:
-            id: matchYourTeamVictoryStatus
-            text: "Victory/Defeat"
-            font_size: (int(self.height/30) + int(self.width/30)) / 2
-            pos_hint: {'y': 0.25, 'x': -.45}
-        Label:
-            text: "Champion"
-            font_size: (int(self.height/30) + int(self.width/30)) / 2
-            pos_hint: {'y': 0.25, 'x': -.35}
-        Label:
-            text: "Rank"
-            font_size: (int(self.height/30) + int(self.width/30)) / 2
-            pos_hint: {'y': 0.25, 'x': -.25}
-        Label:
-            text: "KDA"
-            font_size: (int(self.height/30) + int(self.width/30)) / 2
-            pos_hint: {'y': 0.25, 'x': -.15}
-        Label:
-            text: "Damage"
-            font_size: (int(self.height/30) + int(self.width/30)) / 2
-            pos_hint: {'y': 0.25, 'x': -.05}
-        Label:
-            text: "Wards"
-            font_size: (int(self.height/30) + int(self.width/30)) / 2
-            pos_hint: {'y': 0.25, 'x': .05}
-        Label:
-            text: "CS"
-            font_size: (int(self.height/30) + int(self.width/30)) / 2
-            pos_hint: {'y': 0.25, 'x': .15}
-        Label:
-            text: "Items"
-            font_size: (int(self.height/30) + int(self.width/30)) / 2
-            pos_hint: {'y': 0.25, 'x': .25}
-        Label:
-            text: "Neutral Objectives"
-            font_size: (int(self.height/30) + int(self.width/30)) / 2
-            pos_hint: {'y': 0.25, 'x': .35}
-        Label:
-            text: "Towers"
-            font_size: (int(self.height/30) + int(self.width/30)) / 2
-            pos_hint: {'y': 0.25, 'x': .45}
 
-        # Your Teams Grid Layout
+        # Match Scroll view
+        ScrollView:
+            pos_hint: {"bottom": .2, 'x':.01}
+            size_hint: 1, .8
+            GridLayout:
+                id: matchGridLayout
+                cols: 10
+                height: self.minimum_height
+                size_hint: 1, None
+                spacing: 0 , 20
 
-
-
-
-        # Their Teams Labels
-        Label:
-            id: matchTheirTeamVictoryStatus
-            text: "Victory/Defeat"
-        Label:
-            text: "Champion"
-        Label:
-            text: "Rank"
-        Label:
-            text: "KDA"
-        Label:
-            text: "Damage"
-        Label:
-            text: "Wards"
-        Label:
-            text: "CS"
-        Label:
-            text: "Items"
-        Label:
-            text: "Neutral Objectives"
-        Label
-            text: "Towers"
-
-
-
-
-
+                Label:
+                    text: "Name"
+                Label:
+                    text: "Champion"
+                Label:
+                    text: "Level"
+                Label:
+                    text: "KDA"
+                Label:
+                    text: "Damage"
+                Label:
+                    text: "Wards Normal/Killed/Pink"
+                Label:
+                    text: "CS"
+                Label:
+                    text: "Items"
+                Label:
+                    text: "Objectives"
+                Label
+                    text: "Towers"
 
         Button:
             pos_hint: {"bottom":.5}

@@ -1,7 +1,6 @@
 # Testing out the Riot Game League of Legends API
 #       - Geoffroy Penny
 
-import summoner_lookup
 import kivy
 from kivy.app import App
 from kivy.properties import ObjectProperty
@@ -20,8 +19,14 @@ from functools import partial
 from kivy.clock import Clock
 import json
 
+import cassiopeia as cass
+
+import pprint
+
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-c05228ed-0a6c-430e-8910-bc5adc874246"
+DevelopmentAPIKey = "RGAPI-e846b01e-7e79-4842-89ea-7054a562c6c7"
+cass.set_riot_api_key(DevelopmentAPIKey)
+
 
 # Todo
 #   Add a settings tab
@@ -33,10 +38,12 @@ DevelopmentAPIKey = "RGAPI-c05228ed-0a6c-430e-8910-bc5adc874246"
 #       Add nicer text
 #       Remove refresh button (add it into profile gui to update match history)
 #   Profiles GUI
+#       Integrate cassiopeia
 #       Don't rewrite all data to summoner 1 until you need it in the next class, only rewrite json
 #       Add rank to the summoner name button
 #       Add star to remove/ add to favorites
 #       Add variable spacing between widgets in match history scroll view, currently set to 20
+#       Add progress bar for loading matches
 #   Match GUI
 #       Add view summoner button next to other summoners in the game
 #   Ranked: solo
@@ -120,6 +127,7 @@ class HomeGui(Screen):
             code = url_data.status_code
             # Checks to see if the enter summoner name is valid in that region
             if code == 200:
+                summoner_1.cass_region = self.region_selection.text
                 summoner_1.region = region
                 summoner_1.set_summoner_data()
                 summoner_1.set_ranked_data()
@@ -162,6 +170,23 @@ class HomeGui(Screen):
             popup.open_popup_4()
             print("API Key Outdated")
         else:
+            # Todo: can be removed if ever fully committed tocassiopeiaa
+            region_conversion = {
+                "BR1": "BR",
+                "EUN1": "EUN",
+                "EUW1": "EUW",
+                "JP1": "JP",
+                "KR": "KR",
+                "LA1": "LA1",
+                "LA2": "LA2",
+                "NA1": "NA",
+                "OC1": "OC",
+                "TR1": "TR",
+                "RU": "RU",
+                }
+            summoner_1.cass_region = region_conversion[region]
+
+
             # All data for summoner lookup
             summoner_1.region = region
             summoner_1.set_summoner_data()
@@ -386,11 +411,14 @@ class ProfileGui(Screen):
         """
         self.profile_match_history.clear_widgets()
 
-        url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/"+ summoner_1.account_id +"?endIndex=20&api_key=" + DevelopmentAPIKey
+        #url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/"+ summoner_1.account_id +"?endIndex=20&api_key=" + DevelopmentAPIKey
+        # TODO changed to only one match for testing
+        url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/"+ summoner_1.account_id +"?endIndex=1&api_key=" + DevelopmentAPIKey
         match_history = requests.get(url)
         match_history = match_history.json()
 
         for match in match_history['matches']:
+
             view_button = Button(text="View Match", size_hint=(None, None), height=self.height/8, width=self.width/9, id=str(match['gameId']))
             view_button.bind(on_press=partial(self.match_search))
             self.profile_match_history.add_widget(view_button)
@@ -414,8 +442,7 @@ class ProfileGui(Screen):
             match_data = requests.get(url)
             match_data = match_data.json()
 
-            # TODO remove
-            print("match data", match_data)
+
 
             # To get game length --> minutes:seconds
             match_length = match_data['gameDuration']/60
@@ -425,8 +452,6 @@ class ProfileGui(Screen):
 
             for players in match_data['participants']:
                 if players['championId'] == match['champion']:
-
-                    print(players['stats'])
 
                     # TODO convert ids to name/get icon --> datadragon summoner
                     spell_1_id = players['spell1Id']
@@ -516,6 +541,7 @@ class MatchGui(Screen):
     def __init__(self, **kwargs):
         super(Screen, self).__init__(**kwargs)
         self.name = 'match'
+        self.match_data = None
 
     def on_enter(self, *args):
         """
@@ -523,12 +549,16 @@ class MatchGui(Screen):
         :param args:
         :return:
         """
-        print(summoner_1.current_match_id)
+
+        #TODO Posible remove
         # Obtains the matches data
         url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matches/' + str(
             summoner_1.current_match_id) + '?api_key=' + DevelopmentAPIKey
         match_data = requests.get(url)
         match_data = match_data.json()
+        self.match_data = match_data
+
+        self.populate_match_data()
 
     def populate_match_data(self):
         """
@@ -536,9 +566,104 @@ class MatchGui(Screen):
         :return:
         """
 
-        # Todo: add labels on top of the grid layout
-        # Todo: add grid layout
-        pass
+        # TODO add the region variable
+        match = cass.get_match(int(summoner_1.current_match_id), summoner_1.cass_region)
+        red_team = match.red_team.to_dict()
+        blue_team = match.blue_team.to_dict()
+
+        self.team_loop(red_team)
+        self.team_loop(blue_team)
+
+    def team_loop(self, team_data):
+        """
+        team_loop: loops through one of the teams to populate the match grid layout
+        :param team_data: a dict containing all of the teams data
+        :return:
+        """
+
+        if team_data['isWinner']:
+            text_color = '11d111'   # Green
+        else:
+            text_color = 'ff3333'   # Red
+
+        for summoner in team_data['participants']:
+            name = summoner['summonerName']
+            self.create_label(name)
+
+            champion_id = summoner['championId']
+            self.create_label(champion_id)
+
+            # TODO use for match history champ conversion, way faster
+            # Creates a champion id to name conversion dictionary
+            with open('data_dragon_10.14.1/10.14.1/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
+                champion_dict = json.load(champion_data)
+
+            champion_id_to_name = {}
+            for key in champion_dict['data']:
+                row = champion_dict['data'][key]
+                champion_id_to_name[row['key']] = row['id']
+
+
+            champion = champion_id_to_name.get(str(champion_id))
+
+            #TODO REmove
+            pprint.pprint(summoner)
+            print("========================================================================================================================================================================")
+
+            level = summoner['stats']['champLevel']
+            self.create_label(level)
+
+            KDA = ("%d/%d/%d" % (summoner['stats']['kills'], summoner['stats']['deaths'], summoner['stats']['assists']))
+            if summoner['stats']['deaths'] == 0:
+                calculated_kda = "Infinite"
+            else:
+                calculated_kda = round(((summoner['stats']['kills'] + summoner['stats']['assists']) / summoner['stats']['deaths']), 2)
+            self.create_label(str(KDA) + "\n" + str(calculated_kda))
+
+            damage = summoner['stats']['totalDamageDealtToChampions']
+            self.create_label(damage)
+
+            wards = ('%d/%d/%d' %(summoner['stats']['wardsPlaced'], summoner['stats']['wardsKilled'], summoner['stats']['visionWardsBoughtInGame']))
+            self.create_label(wards)
+
+            cs = summoner['stats']['neutralMinionsKilled'] + summoner['stats']['totalMinionsKilled']
+            self.create_label(cs)
+
+            items = [summoner['stats']['item0'], summoner['stats']['item1'], summoner['stats']['item2'], summoner['stats']['item3'], summoner['stats']['item4'], summoner['stats']['item5'], summoner['stats']['item6'],]
+            self.add_item_images(items)
+
+            objectives = None
+            self.create_label(objectives)
+
+            towers = None
+            self.create_label(towers)
+
+    def add_item_images(self, item_list):
+        """
+        add_item_images: Takes an item id list and creates a grid layout of item images
+        :param item_list: list of int's representing item id's
+        :return:
+        """
+        item_grid_layout = GridLayout(cols=3)
+        for item in item_list:
+            if item == 0:
+                pass
+            else:
+                item_image = Image(source='data_dragon_10.14.1/10.14.1/img/item/' + str(item) + ".png",
+                                   allow_stretch=True, keep_ratio=False, size_hint=(None, None),
+                                   width=self.width / 14, height=self.height / 17)
+                item_grid_layout.add_widget(item_image)
+        self.match_grid_layout.add_widget(item_grid_layout)
+
+    def create_label(self, label_text):
+        """
+        create_label: creates and adds label to the grid layout with specified text
+        :param label_text: a string of text that will be the label
+        :return:
+        """
+        label = Label(text=str(label_text), size_hint=(None, None), height=self.height / 8)
+        self.match_grid_layout.add_widget(label)
+
 
 # ==========================================================================================
 #       All Champions Gui: List of all champion stats from the current season
@@ -565,8 +690,10 @@ class GuiManager(ScreenManager):
 
 class Summoner:
     def __init__(self):
-        self.region = None              # The summoners region
-        self.summoner_data = None       # JSON of all summoners data - obtained from requests()
+        self.cass_region = None
+
+        self.region = None
+        self.summoner_data = None
         self.account_id = None
         self.puuid = None
         self.id = None
