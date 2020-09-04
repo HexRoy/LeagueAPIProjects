@@ -529,18 +529,34 @@ class ProfileGui(Screen):
         self.parent.current = "match"
 
     def set_ranked_solo(self):
+        """
+        set_ranked_solo: sets the url to filter by solo ranked games
+        :return:
+        """
         self.url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=420&endIndex=2&api_key=" + str(DevelopmentAPIKey)
         self.populate_match_history()
 
     def set_ranked_flex(self):
+        """
+        set_ranked_flex: sets the url to filter by flex ranked games
+        :return:
+        """
         self.url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=440&endIndex=2&api_key=" + str(DevelopmentAPIKey)
         self.populate_match_history()
 
     def set_ranked_clash(self):
+        """
+        set_ranked_clash: sets the url to filter by clash games
+        :return:
+        """
         self.url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=700&endIndex=2&api_key=" + str(DevelopmentAPIKey)
         self.populate_match_history()
 
     def set_all_games(self):
+        """
+        set_all_games: sets the url to filter by all gamess
+        :return:
+        """
         self.url = "https://" + str(summoner_1.region) + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(summoner_1.account_id) + "?endIndex=2&api_key=" + str(DevelopmentAPIKey)
         self.populate_match_history()
 
