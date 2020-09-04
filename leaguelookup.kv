@@ -2,6 +2,7 @@ GuiManager:
     HomeGui:
     ProfileGui:
     MatchGui:
+    SettingsGui:
     #AllChampionsGui:
     #SingleChampionGui:
 
@@ -62,16 +63,13 @@ GuiManager:
             text: "History"
             pos_hint: {"x": .25, "y": .03}
 
-        # Todo just for test can delete
         Button:
-            text: "Refresh"
+            text: "Settings"
             pos_hint: {'x': .4}
             size_hint: .15 , .075
-            on_press:
-                root.populate_history()
-                root.populate_favorites()
-
-
+            on_release:
+                app.root.current = "settings"
+                app.root.transition.direction = "left"
 
         # Favorites Scroll view
         ScrollView:
@@ -82,8 +80,6 @@ GuiManager:
                 cols: 2
                 height: self.minimum_height
                 size_hint: None, None
-
-
 
         # History scroll view
         ScrollView:
@@ -147,7 +143,7 @@ GuiManager:
             background_normal: "images/logo.png"
             on_release:
                 app.root.current = "home"
-                app.root.transition.direction = "right"
+                app.root.transition.direction = "left"
         Label:
             id: profileSummonerName
             font_size: (int(self.height/15) + int(self.width/15)) / 2
@@ -231,24 +227,31 @@ GuiManager:
                     Rectangle:
                         pos: self.pos
                         size: self.size
-        Button:
-            text: "Live Game"
-            pos_hint: {'top': 0.585, 'x': 0.75}
-            size_hint: .15, .075
-        Button:
-            text: "Ranked: Solo"
-            pos_hint: {'top': 0.585, 'x': 0.5333}
-            size_hint: .15, .075
-        Button:
-            text: "Ranked Flex"
-            pos_hint: {'top': 0.585, 'x': 0.3166}
-            size_hint: .15, .075
-        Button:
-            text: "Champion Stats"
-            pos_hint: {'top': 0.585, 'x': 0.10}
-            size_hint: .15, .075
-
-
+        # Filter, Live game, and champion stats buttons grid layout
+        GridLayout:
+            cols: 6
+            pos_hint: {'top': 0.585}
+            size_hint: 1, 0.075
+            Button:
+                text: "Live Game"
+            Button:
+                text: "All Games"
+                on_release:
+                    root.set_all_games()
+            Button:
+                text: "Ranked: Solo"
+                on_release:
+                    root.set_ranked_solo()
+            Button:
+                text: "Ranked Flex"
+                on_release:
+                    root.set_ranked_flex()
+            Button:
+                text: "Clash"
+                on_release:
+                    root.set_ranked_clash()
+            Button:
+                text: "Champion Stats"
 
         # Match History Scroll view
         ScrollView:
@@ -322,3 +325,23 @@ GuiManager:
             text: "Back"
             on_release:
                 app.root.current = "profile"
+
+# ==========================================================================================
+#       Settings Gui: Contains summoner lookup, region selection, and favorites
+# ==========================================================================================
+<SettingsGui>:
+    name: 'settings'
+
+    canvas:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            source: "images/background.png"
+
+    Button:
+        pos_hint: {"top":1}
+        size_hint: 1, .15
+        background_normal: "images/logo.png"
+        on_release:
+            app.root.current = "home"
+            app.root.transition.direction = "right"

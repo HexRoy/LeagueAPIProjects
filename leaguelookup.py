@@ -1,7 +1,6 @@
 # Testing out the Riot Game League of Legends API
 #       - Geoffroy Penny
 
-import kivy
 from kivy.app import App
 from kivy.properties import ObjectProperty
 from kivy.uix.screenmanager import Screen, ScreenManager
@@ -24,18 +23,18 @@ import cassiopeia as cass
 import pprint
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-e846b01e-7e79-4842-89ea-7054a562c6c7"
+DevelopmentAPIKey = "RGAPI-adf5948c-52d4-4f3f-8168-a98fd21246fc"
 cass.set_riot_api_key(DevelopmentAPIKey)
-
 
 # Todo
 #   Add a settings tab
 #       choose default region
-#       reorder favorites
+#           if default region: auto select that for drop down
 #       color scheme
 #   Home GUI
 #       Add nicer buttons
 #       Add nicer text
+#       reorder favorites
 #       Remove refresh button (add it into profile gui to update match history)
 #   Profiles GUI
 #       Integrate cassiopeia
@@ -58,7 +57,7 @@ cass.set_riot_api_key(DevelopmentAPIKey)
 #   CRASH : when searching a summoner without a rank, need to add an if case to summoner_1.set_ranked_data
 #       IF no rank, display the summoner level instead
 #   CRASH : something to do with time duration of a match (possibly aram games have a different variable)
-#   Fix transition directions for each screen
+#   Fix: transition directions for each screen
 #   Challenger rank not needed: Challenger I
 
 
@@ -379,6 +378,7 @@ class ProfileGui(Screen):
     def __init__(self, **kwargs):
         super(Screen, self).__init__(**kwargs)
         self.name = "profile"
+        self.url = None
 
     def on_enter(self):
         """
@@ -388,8 +388,10 @@ class ProfileGui(Screen):
         :return:
         """
         if self.profile_summoner_name.text == summoner_1.name:
+            self.url = "https://" + str(summoner_1.region) + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(summoner_1.account_id) + "?endIndex=2&api_key=" + str(DevelopmentAPIKey)
             pass
         else:
+            self.url = "https://" + str(summoner_1.region) + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(summoner_1.account_id) + "?endIndex=2&api_key=" + str(DevelopmentAPIKey)
             self.profile_summoner_name.text = summoner_1.name
 
             self.profile_solo_rank_icon.source = 'images/ranks/Emblem_' + summoner_1.solo_tier + '.png'
@@ -410,39 +412,32 @@ class ProfileGui(Screen):
         :return:
         """
         self.profile_match_history.clear_widgets()
-
-        #url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/"+ summoner_1.account_id +"?endIndex=20&api_key=" + DevelopmentAPIKey
-        # TODO changed to only one match for testing
-        url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/"+ summoner_1.account_id +"?endIndex=1&api_key=" + DevelopmentAPIKey
-        match_history = requests.get(url)
+        match_history = requests.get(self.url)
         match_history = match_history.json()
 
-        for match in match_history['matches']:
+        # Creates a champion id to name conversion dictionary
+        with open('data_dragon_10.14.1/10.14.1/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
+            champion_dict = json.load(champion_data)
+        champion_id_to_name = {}
+        for key in champion_dict['data']:
+            row = champion_dict['data'][key]
+            champion_id_to_name[row['key']] = row['id']
 
+        for match in match_history['matches']:
+            # View match button
             view_button = Button(text="View Match", size_hint=(None, None), height=self.height/8, width=self.width/9, id=str(match['gameId']))
             view_button.bind(on_press=partial(self.match_search))
             self.profile_match_history.add_widget(view_button)
 
-            # Gets the champions that is played in the game
-            with open('data_dragon_10.14.1/10.14.1/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
-                champion_dict = json.load(champion_data)
-
-            for champion in champion_dict['data']:
-                try:
-                    test = list(champion_dict['data'][champion].keys())[list(champion_dict['data'][champion].values()).index(str(match['champion']))]
-                    break
-                except ValueError:
-                    pass
-
-            champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/'+champion+'.png', size_hint=(None, None), height=self.height/8)
+            # The champion image
+            champion_name = champion_id_to_name.get(str(match['champion']))
+            champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/'+ champion_name +'.png', size_hint=(None, None), height=self.height/8)
             self.profile_match_history.add_widget(champion_image)
 
             # Obtains the matches data
             url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matches/' + str(match['gameId']) +'?api_key=' + DevelopmentAPIKey
             match_data = requests.get(url)
             match_data = match_data.json()
-
-
 
             # To get game length --> minutes:seconds
             match_length = match_data['gameDuration']/60
@@ -533,6 +528,22 @@ class ProfileGui(Screen):
         summoner_1.current_match_id = button.id
         self.parent.current = "match"
 
+    def set_ranked_solo(self):
+        self.url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=420&endIndex=2&api_key=" + str(DevelopmentAPIKey)
+        self.populate_match_history()
+
+    def set_ranked_flex(self):
+        self.url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=440&endIndex=2&api_key=" + str(DevelopmentAPIKey)
+        self.populate_match_history()
+
+    def set_ranked_clash(self):
+        self.url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=700&endIndex=2&api_key=" + str(DevelopmentAPIKey)
+        self.populate_match_history()
+
+    def set_all_games(self):
+        self.url = "https://" + str(summoner_1.region) + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(summoner_1.account_id) + "?endIndex=2&api_key=" + str(DevelopmentAPIKey)
+        self.populate_match_history()
+
 
 # ==========================================================================================
 #       Match Gui: Statistics about a specific game
@@ -566,7 +577,6 @@ class MatchGui(Screen):
         :return:
         """
 
-        # TODO add the region variable
         match = cass.get_match(int(summoner_1.current_match_id), summoner_1.cass_region)
         red_team = match.red_team.to_dict()
         blue_team = match.blue_team.to_dict()
@@ -588,12 +598,8 @@ class MatchGui(Screen):
 
         for summoner in team_data['participants']:
             name = summoner['summonerName']
-            self.create_label(name)
-
             champion_id = summoner['championId']
-            self.create_label(champion_id)
 
-            # TODO use for match history champ conversion, way faster
             # Creates a champion id to name conversion dictionary
             with open('data_dragon_10.14.1/10.14.1/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
                 champion_dict = json.load(champion_data)
@@ -602,40 +608,34 @@ class MatchGui(Screen):
             for key in champion_dict['data']:
                 row = champion_dict['data'][key]
                 champion_id_to_name[row['key']] = row['id']
-
-
-            champion = champion_id_to_name.get(str(champion_id))
+            champion_name = champion_id_to_name.get(str(champion_id))
 
             #TODO REmove
             pprint.pprint(summoner)
             print("========================================================================================================================================================================")
 
             level = summoner['stats']['champLevel']
-            self.create_label(level)
-
             KDA = ("%d/%d/%d" % (summoner['stats']['kills'], summoner['stats']['deaths'], summoner['stats']['assists']))
             if summoner['stats']['deaths'] == 0:
                 calculated_kda = "Infinite"
             else:
                 calculated_kda = round(((summoner['stats']['kills'] + summoner['stats']['assists']) / summoner['stats']['deaths']), 2)
-            self.create_label(str(KDA) + "\n" + str(calculated_kda))
-
             damage = summoner['stats']['totalDamageDealtToChampions']
-            self.create_label(damage)
-
             wards = ('%d/%d/%d' %(summoner['stats']['wardsPlaced'], summoner['stats']['wardsKilled'], summoner['stats']['visionWardsBoughtInGame']))
-            self.create_label(wards)
-
             cs = summoner['stats']['neutralMinionsKilled'] + summoner['stats']['totalMinionsKilled']
-            self.create_label(cs)
-
             items = [summoner['stats']['item0'], summoner['stats']['item1'], summoner['stats']['item2'], summoner['stats']['item3'], summoner['stats']['item4'], summoner['stats']['item5'], summoner['stats']['item6'],]
-            self.add_item_images(items)
-
             objectives = None
-            self.create_label(objectives)
-
             towers = None
+
+            self.create_label(name)
+            self.create_label(champion_name)
+            self.create_label(level)
+            self.create_label(str(KDA) + "\n" + str(calculated_kda))
+            self.create_label(damage)
+            self.create_label(wards)
+            self.add_item_images(items)
+            self.create_label(cs)
+            self.create_label(objectives)
             self.create_label(towers)
 
     def add_item_images(self, item_list):
@@ -663,6 +663,14 @@ class MatchGui(Screen):
         """
         label = Label(text=str(label_text), size_hint=(None, None), height=self.height / 8)
         self.match_grid_layout.add_widget(label)
+
+
+# ==========================================================================================
+#       Settings Gui: Contains the user settings for the app
+# ==========================================================================================
+class SettingsGui(Screen):
+    def __init__(self, **kwargs):
+        super(Screen, self).__init__(**kwargs)
 
 
 # ==========================================================================================
