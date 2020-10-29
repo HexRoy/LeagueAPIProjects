@@ -1,6 +1,8 @@
 # Testing out the Riot Game League of Legends API
 #       - Geoffroy Penny
 
+# Imports
+#   Kivy
 from kivy.app import App
 from kivy.properties import ObjectProperty
 from kivy.uix.screenmanager import Screen, ScreenManager
@@ -11,19 +13,18 @@ from kivy.uix.label import Label
 from kivy.uix.image import Image
 from kivy.uix.gridlayout import GridLayout
 from kivy.lang import Builder
+#   Other
 import requests
 import pandas
 import os
 from functools import partial
 from kivy.clock import Clock
 import json
-
 import cassiopeia as cass
-
 import pprint
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-adf5948c-52d4-4f3f-8168-a98fd21246fc"
+DevelopmentAPIKey = "RGAPI-f3cb82fd-a7cf-4bd7-b626-6892cf9201e7"
 cass.set_riot_api_key(DevelopmentAPIKey)
 
 # Todo
@@ -243,9 +244,8 @@ class HomeGui(Screen):
                                      height=self.height / 10, width=self.width / 3.5)
             summoner_button.bind(on_press=partial(self.history_search))
 
-            favorite_button = Button(background_normal="images/goldstar.png", background_down="images/blackstar.png",
-                                     size_hint=(None, None), height=self.height / 10, width=self.width / 10,
-                                     id=str(index))
+            favorite_button = Button(background_normal="images/goldstar.png", background_down="images/blackstar.png", size_hint=(None, None), height=self.height/10, width=self.width/10) #, id=str(index))
+            favorite_button.id = str(index)
             favorite_button.bind(on_press=partial(self.remove_favorites))
 
             self.favorites_grid_layout.add_widget(summoner_button)
@@ -309,7 +309,8 @@ class HomeGui(Screen):
             summoner_button = Button(text=line['name']+"  :  "+line['region'], size_hint=(None, None), height=self.height/10, width=self.width/3.5)
             summoner_button.bind(on_press=partial(self.history_search))
 
-            favorite_button = Button(background_normal="images/blackstar.png", background_down="images/goldstar.png", size_hint=(None, None), height=self.height/10, width=self.width/10, id=str(index))
+            favorite_button = Button(background_normal="images/blackstar.png", background_down="images/goldstar.png", size_hint=(None, None), height=self.height/10, width=self.width/10)
+            favorite_button.id = str(index)
             favorite_button.bind(on_press=partial(self.remove_history))
 
             self.history_grid_layout.add_widget(summoner_button)
@@ -425,7 +426,8 @@ class ProfileGui(Screen):
 
         for match in match_history['matches']:
             # View match button
-            view_button = Button(text="View Match", size_hint=(None, None), height=self.height/8, width=self.width/9, id=str(match['gameId']))
+            view_button = Button(text="View Match", size_hint=(None, None), height=self.height/8, width=self.width/9)
+            view_button.id = str(match['gameId'])
             view_button.bind(on_press=partial(self.match_search))
             self.profile_match_history.add_widget(view_button)
 
@@ -841,7 +843,6 @@ class leaguelookupApp(App):
     def build(self):
         return kv
 
+
 if __name__ == "__main__":
     leaguelookupApp().run()
-
-
