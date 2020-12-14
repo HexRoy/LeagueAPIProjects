@@ -24,7 +24,7 @@ import cassiopeia as cass
 import pprint
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-f3cb82fd-a7cf-4bd7-b626-6892cf9201e7"
+DevelopmentAPIKey = "RGAPI-3403c07a-1f45-4b1a-96b3-b6ba12045f53"
 cass.set_riot_api_key(DevelopmentAPIKey)
 
 # Todo
@@ -32,6 +32,7 @@ cass.set_riot_api_key(DevelopmentAPIKey)
 #       choose default region
 #           if default region: auto select that for drop down
 #       color scheme
+#       reset all search history and favorites button with confirmation popup
 #   Home GUI
 #       Add nicer buttons
 #       Add nicer text
@@ -626,33 +627,50 @@ class MatchGui(Screen):
             for key in champion_dict['data']:
                 row = champion_dict['data'][key]
                 champion_id_to_name[row['key']] = row['id']
+
             champion_name = champion_id_to_name.get(str(champion_id))
+            champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/' + champion_name + '.png',
+                                   size_hint=(None, None), height=self.height / 8, width=self.width/10)
 
             #TODO REmove
             pprint.pprint(summoner)
             print("========================================================================================================================================================================")
 
             level = summoner['stats']['champLevel']
+
+            # Obtains KDA Information
             KDA = ("%d/%d/%d" % (summoner['stats']['kills'], summoner['stats']['deaths'], summoner['stats']['assists']))
             if summoner['stats']['deaths'] == 0:
                 calculated_kda = "Infinite"
             else:
-                calculated_kda = round(((summoner['stats']['kills'] + summoner['stats']['assists']) / summoner['stats']['deaths']), 2)
-            damage = summoner['stats']['totalDamageDealtToChampions']
-            wards = ('%d/%d/%d' %(summoner['stats']['wardsPlaced'], summoner['stats']['wardsKilled'], summoner['stats']['visionWardsBoughtInGame']))
-            cs = summoner['stats']['neutralMinionsKilled'] + summoner['stats']['totalMinionsKilled']
-            items = [summoner['stats']['item0'], summoner['stats']['item1'], summoner['stats']['item2'], summoner['stats']['item3'], summoner['stats']['item4'], summoner['stats']['item5'], summoner['stats']['item6'],]
-            objectives = None
-            towers = None
+                calculated_kda = round(
+                    ((summoner['stats']['kills'] + summoner['stats']['assists']) / summoner['stats']['deaths']), 2)
 
+            # To get game length --> minutes:seconds
+            match_length = self.match_data['gameDuration'] / 60
+            minutes = int(match_length)
+
+            cs = summoner['stats']['neutralMinionsKilled'] + summoner['stats']['totalMinionsKilled']
+            cs_per_minute = round(cs / minutes, 1)
+
+            stats = 'Level: ' + str(level) + '\n' + KDA + '\nKDA: ' + str(calculated_kda) + '\nCS: ' + str(cs) + " (" + str(cs_per_minute) + ")"
+
+
+
+            damage = summoner['stats']['totalDamageDealtToChampions']
+            wards = ('Normal: %d\nKilled: %d\nPinks: %d' %(summoner['stats']['wardsPlaced'], summoner['stats']['wardsKilled'], summoner['stats']['visionWardsBoughtInGame']))
+
+            items = [summoner['stats']['item0'], summoner['stats']['item1'], summoner['stats']['item2'], summoner['stats']['item3'], summoner['stats']['item4'], summoner['stats']['item5']]
+            objectives = "None"
+            towers = "None"
+
+            # Adds/Creates all labels for the grid layout
             self.create_label(name)
-            self.create_label(champion_name)
-            self.create_label(level)
-            self.create_label(str(KDA) + "\n" + str(calculated_kda))
+            self.match_grid_layout.add_widget(champion_image)
+            self.create_label(stats)
+            self.add_item_images(items)
             self.create_label(damage)
             self.create_label(wards)
-            self.add_item_images(items)
-            self.create_label(cs)
             self.create_label(objectives)
             self.create_label(towers)
 
@@ -679,7 +697,7 @@ class MatchGui(Screen):
         :param label_text: a string of text that will be the label
         :return:
         """
-        label = Label(text=str(label_text), size_hint=(None, None), height=self.height / 8)
+        label = Label(text=str(label_text), size_hint=(None, None), height=self.height / 8, width=self.width/10)
         self.match_grid_layout.add_widget(label)
 
 

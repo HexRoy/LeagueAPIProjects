@@ -289,31 +289,29 @@ GuiManager:
 
         # Match Scroll view
         ScrollView:
-            pos_hint: {"bottom": .2, 'x':.01}
-            size_hint: 1, .8
+            pos_hint: {'y': .20 ,'x':.00}
+            size_hint: 1, .65
             GridLayout:
                 id: matchGridLayout
-                cols: 10
+                cols: 8
                 height: self.minimum_height
                 size_hint: 1, None
-                spacing: 0 , 20
+                spacing: self.width/16 , 20
 
                 Label:
-                    text: "Name"
+                    text: "Summoner"
                 Label:
                     text: "Champion"
                 Label:
-                    text: "Level"
+                    text: "Stats"
                 Label:
-                    text: "KDA"
+                    text: "Items"
+                    size_hint: None, None
+                    width: root.width/6
                 Label:
                     text: "Damage"
                 Label:
-                    text: "Wards Normal/Killed/Pink"
-                Label:
-                    text: "CS"
-                Label:
-                    text: "Items"
+                    text: "Wards"
                 Label:
                     text: "Objectives"
                 Label
