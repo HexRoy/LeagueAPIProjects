@@ -24,7 +24,7 @@ import cassiopeia as cass
 import pprint
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-3403c07a-1f45-4b1a-96b3-b6ba12045f53"
+DevelopmentAPIKey = "RGAPI-f2dc6ad9-f61f-49ba-a300-e482ce6ac8bd"
 cass.set_riot_api_key(DevelopmentAPIKey)
 
 # Todo
@@ -34,10 +34,8 @@ cass.set_riot_api_key(DevelopmentAPIKey)
 #       color scheme
 #       reset all search history and favorites button with confirmation popup
 #   Home GUI
-#       Add nicer buttons
-#       Add nicer text
 #       reorder favorites
-#       Remove refresh button (add it into profile gui to update match history)
+#       Revamp region/setting + button text
 #   Profiles GUI
 #       Integrate cassiopeia
 #       Don't rewrite all data to summoner 1 until you need it in the next class, only rewrite json
@@ -241,7 +239,7 @@ class HomeGui(Screen):
 
         df = pandas.read_csv('favorites.csv')
         for index, line in df.iterrows():
-            summoner_button = Button(text=line['name'] + "  :  " + line['region'], size_hint=(None, None),
+            summoner_button = Button(background_normal="images/button background.png", color=(0, 0, 0, 1), text=line['name'] + "  :  " + line['region'], size_hint=(None, None),
                                      height=self.height / 10, width=self.width / 3.5)
             summoner_button.bind(on_press=partial(self.history_search))
 
@@ -307,7 +305,7 @@ class HomeGui(Screen):
 
         df = pandas.read_csv('history.csv')
         for index, line in df.iterrows():
-            summoner_button = Button(text=line['name']+"  :  "+line['region'], size_hint=(None, None), height=self.height/10, width=self.width/3.5)
+            summoner_button = Button(background_normal="images/button background2.png", text=line['name']+"  :  "+line['region'], size_hint=(None, None), height=self.height/10, width=self.width/3.5)
             summoner_button.bind(on_press=partial(self.history_search))
 
             favorite_button = Button(background_normal="images/blackstar.png", background_down="images/goldstar.png", size_hint=(None, None), height=self.height/10, width=self.width/10)
@@ -434,8 +432,15 @@ class ProfileGui(Screen):
 
             # The champion image
             champion_name = champion_id_to_name.get(str(match['champion']))
-            champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/'+ champion_name +'.png', size_hint=(None, None), height=self.height/8)
-            self.profile_match_history.add_widget(champion_image)
+
+            if champion_name is not None:
+                champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/' + champion_name + '.png', size_hint=(None, None), height=self.height/8)
+                self.profile_match_history.add_widget(champion_image)
+            else:
+                self.profile_match_history.add_widget(Image(source='data_dragon_10.14.1/10.14.1/img/champion/None.png', size_hint=(None, None), height=self.height/8))
+
+
+
 
             # Obtains the matches data
             url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matches/' + str(match['gameId']) +'?api_key=' + DevelopmentAPIKey
@@ -629,8 +634,10 @@ class MatchGui(Screen):
                 champion_id_to_name[row['key']] = row['id']
 
             champion_name = champion_id_to_name.get(str(champion_id))
-            champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/' + champion_name + '.png',
-                                   size_hint=(None, None), height=self.height / 8, width=self.width/10)
+            if champion_name is not None:
+                champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/' + champion_name + '.png', size_hint=(None, None), height=self.height / 8, width=self.width/10)
+            else:
+                champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/None.png', size_hint=(None, None), height=self.height / 8, width=self.width / 10)
 
             #TODO REmove
             pprint.pprint(summoner)
