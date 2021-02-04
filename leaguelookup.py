@@ -43,7 +43,6 @@ cass.set_riot_api_key(DevelopmentAPIKey)
 #       Add star to remove/ add to favorites
 #       Add variable spacing between widgets in match history scroll view, currently set to 20
 #       Add progress bar for loading matches
-#       Add account level under name
 #   Match GUI
 #       Add view summoner button next to other summoners in the game
 #   Ranked: solo
@@ -388,7 +387,6 @@ class ProfileGui(Screen):
         """
         if self.profile_summoner_name.text == summoner_1.name:
             self.url = "https://" + str(summoner_1.region) + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(summoner_1.account_id) + "?endIndex=2&api_key=" + str(DevelopmentAPIKey)
-            print("bad")
         else:
             self.url = "https://" + str(summoner_1.region) + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(summoner_1.account_id) + "?endIndex=2&api_key=" + str(DevelopmentAPIKey)
 
@@ -614,6 +612,7 @@ class MatchGui(Screen):
         populate_match_data: adds all of the match data to the grid layout
         :return:
         """
+        self.match_grid_layout.clear_widgets()
 
         match = cass.get_match(int(summoner_1.current_match_id), summoner_1.cass_region)
         red_team = match.red_team.to_dict()
