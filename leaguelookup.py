@@ -388,10 +388,13 @@ class ProfileGui(Screen):
         """
         if self.profile_summoner_name.text == summoner_1.name:
             self.url = "https://" + str(summoner_1.region) + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(summoner_1.account_id) + "?endIndex=2&api_key=" + str(DevelopmentAPIKey)
-            pass
+            print("bad")
         else:
             self.url = "https://" + str(summoner_1.region) + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(summoner_1.account_id) + "?endIndex=2&api_key=" + str(DevelopmentAPIKey)
+
+            # Summoner name and level
             self.profile_summoner_name.text = summoner_1.name
+            self.profile_summoner_level.text = 'Level: ' + str(summoner_1.summoner_level)
 
             # For solo queue
             if summoner_1.solo_rank is not None:
@@ -819,28 +822,49 @@ class Summoner:
             self.flex_rank = 'I'
             self.flex_league_points = 90
         else:
-            for i in range(len(self.ranked_data)):
-                if self.ranked_data[i]['queueType'] == 'RANKED_SOLO_5x5':
-                    self.solo_tier = self.ranked_data[i]['tier']
-                    self.solo_rank = self.ranked_data[i]['rank']
-                    self.solo_league_points = self.ranked_data[i]['leaguePoints']
-                    self.solo_wins = self.ranked_data[i]['wins']
-                    self.solo_losses = self.ranked_data[i]['losses']
-                    self.solo_veteran = self.ranked_data[i]['veteran']
-                    self.solo_inactive = self.ranked_data[i]['inactive']
-                    self.solo_fresh_blood = self.ranked_data[i]['freshBlood']
-                    self.solo_hot_streak = self.ranked_data[i]['hotStreak']
+            if len(self.ranked_data) == 0:
+                self.ranked_data = None
+                self.solo_tier = None
+                self.solo_rank = None
+                self.solo_league_points = None
+                self.solo_wins = None
+                self.solo_losses = None
+                self.solo_veteran = None
+                self.solo_inactive = None
+                self.solo_fresh_blood = None
+                self.solo_hot_streak = None
+                self.flex_tier = None
+                self.flex_rank = None
+                self.flex_league_points = None
+                self.flex_wins = None
+                self.flex_losses = None
+                self.flex_veteran = None
+                self.flex_inactive = None
+                self.flex_fresh_blood = None
+                self.flex_hot_streak = None
+            else:
+                for i in range(len(self.ranked_data)):
+                    if self.ranked_data[i]['queueType'] == 'RANKED_SOLO_5x5':
+                        self.solo_tier = self.ranked_data[i]['tier']
+                        self.solo_rank = self.ranked_data[i]['rank']
+                        self.solo_league_points = self.ranked_data[i]['leaguePoints']
+                        self.solo_wins = self.ranked_data[i]['wins']
+                        self.solo_losses = self.ranked_data[i]['losses']
+                        self.solo_veteran = self.ranked_data[i]['veteran']
+                        self.solo_inactive = self.ranked_data[i]['inactive']
+                        self.solo_fresh_blood = self.ranked_data[i]['freshBlood']
+                        self.solo_hot_streak = self.ranked_data[i]['hotStreak']
 
-                elif self.ranked_data[i]['queueType'] == 'RANKED_FLEX_SR':
-                    self.flex_tier = self.ranked_data[i]['tier']
-                    self.flex_rank = self.ranked_data[i]['rank']
-                    self.flex_league_points = self.ranked_data[i]['leaguePoints']
-                    self.flex_wins = self.ranked_data[i]['wins']
-                    self.flex_losses = self.ranked_data[i]['losses']
-                    self.flex_veteran = self.ranked_data[i]['veteran']
-                    self.flex_inactive = self.ranked_data[i]['inactive']
-                    self.flex_fresh_blood = self.ranked_data[i]['freshBlood']
-                    self.flex_hot_streak = self.ranked_data[i]['hotStreak']
+                    elif self.ranked_data[i]['queueType'] == 'RANKED_FLEX_SR':
+                        self.flex_tier = self.ranked_data[i]['tier']
+                        self.flex_rank = self.ranked_data[i]['rank']
+                        self.flex_league_points = self.ranked_data[i]['leaguePoints']
+                        self.flex_wins = self.ranked_data[i]['wins']
+                        self.flex_losses = self.ranked_data[i]['losses']
+                        self.flex_veteran = self.ranked_data[i]['veteran']
+                        self.flex_inactive = self.ranked_data[i]['inactive']
+                        self.flex_fresh_blood = self.ranked_data[i]['freshBlood']
+                        self.flex_hot_streak = self.ranked_data[i]['hotStreak']
 
 
     def print_all(self):

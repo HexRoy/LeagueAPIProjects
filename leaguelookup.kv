@@ -122,6 +122,7 @@ GuiManager:
 <ProfileGui>:
     name: "profile"
     profile_summoner_name: profileSummonerName
+    profile_summoner_level: profileSummonerLevel
 
     profile_solo_rank: profileSoloRank
     profile_solo_rank_icon: profileSoloRankIcon
@@ -147,10 +148,16 @@ GuiManager:
             on_release:
                 app.root.current = "home"
                 app.root.transition.direction = "left"
+
+        # Summoner name and level
         Label:
             id: profileSummonerName
             font_size: (int(self.height/15) + int(self.width/15)) / 2
             pos_hint: {'y': 0.25}
+        Label:
+            id: profileSummonerLevel
+            pos_hint: {'y': 0.15}
+            font_size: (int(self.height/15) + int(self.width/15)) / 4
 
         # Solo Rank Grid Layout
         GridLayout:
@@ -230,6 +237,7 @@ GuiManager:
                     Rectangle:
                         pos: self.pos
                         size: self.size
+
         # Filter, Live game, and champion stats buttons grid layout
         GridLayout:
             cols: 6
