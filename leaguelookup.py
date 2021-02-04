@@ -24,7 +24,7 @@ import cassiopeia as cass
 import pprint
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-f2dc6ad9-f61f-49ba-a300-e482ce6ac8bd"
+DevelopmentAPIKey = "RGAPI-c33a3b57-d416-4003-b713-83c3407000eb"
 cass.set_riot_api_key(DevelopmentAPIKey)
 
 # Todo
@@ -43,6 +43,7 @@ cass.set_riot_api_key(DevelopmentAPIKey)
 #       Add star to remove/ add to favorites
 #       Add variable spacing between widgets in match history scroll view, currently set to 20
 #       Add progress bar for loading matches
+#       Add account level under name
 #   Match GUI
 #       Add view summoner button next to other summoners in the game
 #   Ranked: solo
@@ -54,8 +55,6 @@ cass.set_riot_api_key(DevelopmentAPIKey)
 #   Single Champion
 #       win rates on one champion vs every champion you have played against
 #   Live Game
-#   CRASH : when searching a summoner without a rank, need to add an if case to summoner_1.set_ranked_data
-#       IF no rank, display the summoner level instead
 #   CRASH : something to do with time duration of a match (possibly aram games have a different variable)
 #   Fix: transition directions for each screen
 #   Challenger rank not needed: Challenger I
@@ -394,15 +393,27 @@ class ProfileGui(Screen):
             self.url = "https://" + str(summoner_1.region) + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(summoner_1.account_id) + "?endIndex=2&api_key=" + str(DevelopmentAPIKey)
             self.profile_summoner_name.text = summoner_1.name
 
-            self.profile_solo_rank_icon.source = 'images/ranks/Emblem_' + summoner_1.solo_tier + '.png'
-            solo_rank = summoner_1.solo_tier + " " + summoner_1.solo_rank + " " + str(summoner_1.solo_league_points) + " LP"
-            self.profile_solo_rank.text = solo_rank
-            self.profile_solo_win_loss.text = 'W/L: ' + str(summoner_1.solo_wins) + "/" + str(summoner_1.solo_losses)
+            # For solo queue
+            if summoner_1.solo_rank is not None:
+                self.profile_solo_rank_icon.source = 'images/ranks/Emblem_' + summoner_1.solo_tier + '.png'
+                solo_rank = summoner_1.solo_tier + " " + summoner_1.solo_rank + " " + str(summoner_1.solo_league_points) + " LP"
+                self.profile_solo_rank.text = solo_rank
+                self.profile_solo_win_loss.text = 'W/L: ' + str(summoner_1.solo_wins) + "/" + str(summoner_1.solo_losses)
+            else:
+                self.profile_solo_rank_icon.source = 'images/ranks/Emblem_Unranked.png'
+                self.profile_solo_rank.text = "Unranked"
+                self.profile_solo_win_loss.text = 'W/L: Not Available'
 
-            self.profile_flex_rank_icon.source = 'images/ranks/Emblem_' + summoner_1.flex_tier + '.png'
-            flex_rank = summoner_1.flex_tier + " " + summoner_1.flex_rank + " " + str(summoner_1.flex_league_points) + " LP"
-            self.profile_flex_rank.text = flex_rank
-            self.profile_flex_win_loss.text = 'W/L: ' + str(summoner_1.flex_wins) + "/" + str(summoner_1.flex_losses)
+            # For flex queue
+            if summoner_1.flex_rank is not None:
+                self.profile_flex_rank_icon.source = 'images/ranks/Emblem_' + summoner_1.flex_tier + '.png'
+                flex_rank = summoner_1.flex_tier + " " + summoner_1.flex_rank + " " + str(summoner_1.flex_league_points) + " LP"
+                self.profile_flex_rank.text = flex_rank
+                self.profile_flex_win_loss.text = 'W/L: ' + str(summoner_1.flex_wins) + "/" + str(summoner_1.flex_losses)
+            else:
+                self.profile_flex_rank_icon.source = 'images/ranks/Emblem_Unranked.png'
+                self.profile_flex_rank.text = "Unranked"
+                self.profile_flex_win_loss.text = 'W/L: Not Available'
 
             self.populate_match_history()
 
@@ -723,6 +734,14 @@ class AllChampionsGui(Screen):
     def __init__(self, **kwargs):
         super(Screen, self).__init__(**kwargs)
 
+    # def on_enter(self, *args):
+    #     """
+    #     on_enter: Determines what happens when entering the MatchGUI page
+    #     :param args:
+    #     :return:
+    #     """
+    #     pass
+
 
 # ==========================================================================================
 #       Single Champion Gui: All stats about a single champion the summoner plays
@@ -812,7 +831,7 @@ class Summoner:
                     self.solo_fresh_blood = self.ranked_data[i]['freshBlood']
                     self.solo_hot_streak = self.ranked_data[i]['hotStreak']
 
-                else:
+                elif self.ranked_data[i]['queueType'] == 'RANKED_FLEX_SR':
                     self.flex_tier = self.ranked_data[i]['tier']
                     self.flex_rank = self.ranked_data[i]['rank']
                     self.flex_league_points = self.ranked_data[i]['leaguePoints']
@@ -822,6 +841,7 @@ class Summoner:
                     self.flex_inactive = self.ranked_data[i]['inactive']
                     self.flex_fresh_blood = self.ranked_data[i]['freshBlood']
                     self.flex_hot_streak = self.ranked_data[i]['hotStreak']
+
 
     def print_all(self):
         print("region", self.region)

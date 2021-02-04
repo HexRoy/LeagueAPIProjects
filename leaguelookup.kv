@@ -3,7 +3,7 @@ GuiManager:
     ProfileGui:
     MatchGui:
     SettingsGui:
-    #AllChampionsGui:
+    AllChampionsGui:
     #SingleChampionGui:
 
 # ==========================================================================================
@@ -255,6 +255,9 @@ GuiManager:
                     root.set_ranked_clash()
             Button:
                 text: "Champion Stats"
+                on_release:
+                    app.root.current = "allChampions"
+                    app.root.transition.direction = "left"
 
         # Match History Scroll view
         ScrollView:
@@ -328,10 +331,31 @@ GuiManager:
                 app.root.current = "profile"
 
 # ==========================================================================================
-#       Settings Gui: Contains summoner lookup, region selection, and favorites
+#       Settings Gui:
 # ==========================================================================================
 <SettingsGui>:
     name: 'settings'
+
+    canvas:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            source: "images/background.png"
+
+    Button:
+        pos_hint: {"top":1}
+        size_hint: 1, .15
+        background_normal: "images/logo.png"
+        on_release:
+            app.root.current = "home"
+            app.root.transition.direction = "right"
+
+
+# ==========================================================================================
+#       All Champions Gui: All Champions stats for a summoner
+# ==========================================================================================
+<allChampionsGui>:
+    name: 'allChampions'
 
     canvas:
         Rectangle:
