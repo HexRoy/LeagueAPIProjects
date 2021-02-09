@@ -24,7 +24,7 @@ import cassiopeia as cass
 import pprint
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-c33a3b57-d416-4003-b713-83c3407000eb"
+DevelopmentAPIKey = "RGAPI-1321c849-96d2-45a8-91e1-07072682fa55"
 cass.set_riot_api_key(DevelopmentAPIKey)
 
 # Todo
@@ -51,6 +51,7 @@ cass.set_riot_api_key(DevelopmentAPIKey)
 #        Match history of ranked flex games
 #   Champions
 #       Scroll view of all champions that you have played win rates
+#       Add a csv file to save all data, only update it if there is none existing or you hit update
 #   Single Champion
 #       win rates on one champion vs every champion you have played against
 #   Live Game
@@ -735,14 +736,64 @@ class SettingsGui(Screen):
 class AllChampionsGui(Screen):
     def __init__(self, **kwargs):
         super(Screen, self).__init__(**kwargs)
+        self.account_url = None
+        self.match_url = None
+        self.win_rates = {}
 
-    # def on_enter(self, *args):
-    #     """
-    #     on_enter: Determines what happens when entering the MatchGUI page
-    #     :param args:
-    #     :return:
-    #     """
-    #     pass
+    def on_enter(self, *args):
+        """
+        on_enter: Determines what happens when entering the AllChampionsGui page
+        :param args:
+        :return:
+        """
+        self.account_url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=420&endIndex=0&api_key=" + str(DevelopmentAPIKey)
+        account_details = requests.get(self.account_url)
+        account_details = account_details.json()
+        total_games = account_details['totalGames']
+
+        # Max games that can be retrieved at once is 100, if over that amount we need to make multiple calls
+        if total_games <= 100:
+            self.match_url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matchlists/by-account/' + summoner_1.account_id + '?queue=420&endIndex=' + str(total_games) + '&api_key=' + str(DevelopmentAPIKey)
+            match_history = requests.get(self.match_url)
+            match_history = match_history.json()
+            self.calculate_win_rates(match_history)
+        else:
+            pass
+
+    def calculate_win_rates(self, match_data):
+        """
+        calculate_win_rates - To calculate and update your champion win rates
+        :param match_data: json data of ~ 100 games
+        :return:
+        """
+        matches = match_data['matches']
+        for match in matches:
+            current_champ = match['champion']
+            game_id = str(match['gameId'])
+
+            match_lookup = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matches/' + game_id + '?api_key=' + str(DevelopmentAPIKey)
+            match_lookup = requests.get(match_lookup)
+            match_lookup = match_lookup.json()
+
+            for summoner in match_lookup['participants']:
+                if summoner['championId'] == current_champ:
+                    win = summoner['stats']['win']
+
+                    if current_champ in self.win_rates:
+                        if win is True:
+                            self.win_rates[current_champ][0] = self.win_rates[current_champ][0]+1
+                        else:
+                            self.win_rates[current_champ][1] = self.win_rates[current_champ][1]+1
+
+                    else:
+                        if win is True:
+                            self.win_rates[current_champ] = [1, 0]
+                        else:
+                            self.win_rates[current_champ] = [0, 1]
+
+            print('win rates:', self.win_rates)
+
+
 
 
 # ==========================================================================================
