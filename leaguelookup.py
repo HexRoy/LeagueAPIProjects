@@ -24,7 +24,7 @@ import cassiopeia as cass
 import pprint
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-1321c849-96d2-45a8-91e1-07072682fa55"
+DevelopmentAPIKey = "RGAPI-400ade76-8f19-4ca9-ad71-a9592071ac9d"
 cass.set_riot_api_key(DevelopmentAPIKey)
 
 # Todo
@@ -766,6 +766,8 @@ class AllChampionsGui(Screen):
             else:
                 pass
 
+        self.populate_all_champion_win_rates()
+
     def calculate_win_rates(self, match_data):
         """
         calculate_win_rates - To calculate and update your champion win rates
@@ -793,17 +795,18 @@ class AllChampionsGui(Screen):
                             self.win_rates[current_champ][0] = self.win_rates[current_champ][0]+1
                         else:
                             self.win_rates[current_champ][1] = self.win_rates[current_champ][1]+1
-
                     else:
                         if win is True:
                             self.win_rates[current_champ] = [1, 0]
                         else:
                             self.win_rates[current_champ] = [0, 1]
-
+            # Todo Remove
             print('win rates:', self.win_rates)
 
     def populate_all_champion_win_rates(self):
-        pass
+        df = pandas.read_csv('winrate_csv/' + summoner_1.name + 'all_champions_win_rates.csv')
+
+
 
     def save_win_rates(self):
 

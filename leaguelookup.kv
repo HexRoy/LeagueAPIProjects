@@ -364,7 +364,7 @@ GuiManager:
 # ==========================================================================================
 <allChampionsGui>:
     name: 'allChampions'
-
+    all_champions_grid_layout: allChampionsGridLayout
     canvas:
         Rectangle:
             pos: self.pos
@@ -378,3 +378,40 @@ GuiManager:
         on_release:
             app.root.current = "home"
             app.root.transition.direction = "right"
+
+    # Labels
+    GridLayout:
+        cols: 3
+        pos_hint: {'top': .8}
+        size_hint: 1, .05
+        Button:
+            text: '<- Back'
+        Button:
+            text: 'Champion'
+        Button:
+            text: 'Win Rate'
+
+    ScrollView:
+        size_hint: 1, .65
+        pos_hint: {'top': .7}
+        GridLayout:
+            id: allChampionsGridLayout
+            cols: 4
+
+            Button:
+                text: 'View'
+            Label:
+                text: 'Skarner'
+            Image:
+                source:
+                    'data_dragon_10.14.1/10.14.1/img/champion/Skarner.png'
+            Label:
+                canvas.before:
+                    Color:
+                        rgba: 1,.5,0,1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+                text: '60%'
+
+
