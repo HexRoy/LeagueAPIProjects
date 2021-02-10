@@ -452,9 +452,6 @@ class ProfileGui(Screen):
             else:
                 self.profile_match_history.add_widget(Image(source='data_dragon_10.14.1/10.14.1/img/champion/None.png', size_hint=(None, None), height=self.height/8))
 
-
-
-
             # Obtains the matches data
             url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matches/' + str(match['gameId']) +'?api_key=' + DevelopmentAPIKey
             match_data = requests.get(url)
@@ -751,14 +748,23 @@ class AllChampionsGui(Screen):
         account_details = account_details.json()
         total_games = account_details['totalGames']
 
-        # Max games that can be retrieved at once is 100, if over that amount we need to make multiple calls
-        if total_games <= 100:
-            self.match_url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matchlists/by-account/' + summoner_1.account_id + '?queue=420&endIndex=' + str(total_games) + '&api_key=' + str(DevelopmentAPIKey)
-            match_history = requests.get(self.match_url)
-            match_history = match_history.json()
-            self.calculate_win_rates(match_history)
+        summoners_path = 'winrate_csv/' + summoner_1.name
+
+        # Checks for previously saved data
+        if os.path.isfile(summoners_path):
+            if os.path.isfile(summoners_path + '/all_champions_win_rates.csv'):
+                pass
+        # If no data stored
         else:
-            pass
+            # Max games that can be retrieved at once is 100, if over that amount we need to make multiple calls
+            if total_games <= 100:
+                self.match_url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matchlists/by-account/' + summoner_1.account_id + '?queue=420&endIndex=' + str(total_games) + '&api_key=' + str(DevelopmentAPIKey)
+                match_history = requests.get(self.match_url)
+                match_history = match_history.json()
+                self.calculate_win_rates(match_history)
+                self.save_win_rates()
+            else:
+                pass
 
     def calculate_win_rates(self, match_data):
         """
@@ -767,6 +773,8 @@ class AllChampionsGui(Screen):
         :return:
         """
         matches = match_data['matches']
+
+        # Loops through all matches in match_data
         for match in matches:
             current_champ = match['champion']
             game_id = str(match['gameId'])
@@ -775,6 +783,7 @@ class AllChampionsGui(Screen):
             match_lookup = requests.get(match_lookup)
             match_lookup = match_lookup.json()
 
+            # Loops through each player in the match
             for summoner in match_lookup['participants']:
                 if summoner['championId'] == current_champ:
                     win = summoner['stats']['win']
@@ -793,6 +802,36 @@ class AllChampionsGui(Screen):
 
             print('win rates:', self.win_rates)
 
+    def populate_all_champion_win_rates(self):
+        pass
+
+    def save_win_rates(self):
+
+        summoners_path = 'winrate_csv/' + summoner_1.name
+
+        # If there is no folder for the summoner
+        if not os.path.isfile(summoners_path):
+            os.mkdir(summoners_path)
+
+        # Creates a champion id to name conversion dictionary
+        with open('data_dragon_10.14.1/10.14.1/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
+            champion_dict = json.load(champion_data)
+        champion_id_to_name = {}
+        for key in champion_dict['data']:
+            row = champion_dict['data'][key]
+            champion_id_to_name[row['key']] = row['id']
+
+        column_1 = []
+        column_2 = []
+        for entry in self.win_rates:
+            champion_name = champion_id_to_name.get(str(entry))
+            column_1.append(champion_name)
+            column_2.append(self.win_rates[entry])
+
+            data = {'champion_name': column_1, 'win_rate': column_2}
+
+        df = pandas.DataFrame(data=data)
+        df.to_csv(summoners_path + '/all_champions_win_rates.csv', header=['champion_name', 'win_rates'], index=False)
 
 
 
