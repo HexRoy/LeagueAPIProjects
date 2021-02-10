@@ -750,12 +750,12 @@ class AllChampionsGui(Screen):
 
         summoners_path = 'winrate_csv/' + summoner_1.name
 
-        # Checks for previously saved data
-        if os.path.isfile(summoners_path):
-            if os.path.isfile(summoners_path + '/all_champions_win_rates.csv'):
-                pass
-        # If no data stored
-        else:
+        # If no directory is found for the summoner, creates one
+        if not os.path.isdir(summoners_path):
+            os.mkdir(summoners_path)
+
+        # If data is not found for the summoner
+        if not os.path.isfile(summoners_path + '/all_champions_win_rates.csv'):
             # Max games that can be retrieved at once is 100, if over that amount we need to make multiple calls
             if total_games <= 100:
                 self.match_url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matchlists/by-account/' + summoner_1.account_id + '?queue=420&endIndex=' + str(total_games) + '&api_key=' + str(DevelopmentAPIKey)
@@ -809,10 +809,6 @@ class AllChampionsGui(Screen):
 
         summoners_path = 'winrate_csv/' + summoner_1.name
 
-        # If there is no folder for the summoner
-        if not os.path.isfile(summoners_path):
-            os.mkdir(summoners_path)
-
         # Creates a champion id to name conversion dictionary
         with open('data_dragon_10.14.1/10.14.1/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
             champion_dict = json.load(champion_data)
@@ -830,10 +826,11 @@ class AllChampionsGui(Screen):
 
             data = {'champion_name': column_1, 'win_rate': column_2}
 
+        # Removes the old file before creating a new one
+        os.remove(summoners_path + '/all_champions_win_rates.csv')
+
         df = pandas.DataFrame(data=data)
         df.to_csv(summoners_path + '/all_champions_win_rates.csv', header=['champion_name', 'win_rates'], index=False)
-
-
 
 # ==========================================================================================
 #       Single Champion Gui: All stats about a single champion the summoner plays
