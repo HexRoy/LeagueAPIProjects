@@ -22,9 +22,12 @@ from kivy.clock import Clock
 import json
 import cassiopeia as cass
 import pprint
+from time import sleep
+import datetime
+
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-400ade76-8f19-4ca9-ad71-a9592071ac9d"
+DevelopmentAPIKey = "RGAPI-83406719-be34-4eba-8694-b20cc00c40b7"
 cass.set_riot_api_key(DevelopmentAPIKey)
 
 # Todo
@@ -743,6 +746,9 @@ class AllChampionsGui(Screen):
         :param args:
         :return:
         """
+        # Clears win rates dictionary from previous loads
+        self.win_rates = {}
+
         self.account_url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=420&endIndex=0&api_key=" + str(DevelopmentAPIKey)
         account_details = requests.get(self.account_url)
         account_details = account_details.json()
@@ -778,6 +784,11 @@ class AllChampionsGui(Screen):
 
         # Loops through all matches in match_data
         for match in matches:
+
+            # Todo Using sleep to delay the calls to riot api
+            sleep(1.3)
+            print('sleeping 1.3 seconds')
+
             current_champ = match['champion']
             game_id = str(match['gameId'])
 
@@ -800,13 +811,9 @@ class AllChampionsGui(Screen):
                             self.win_rates[current_champ] = [1, 0]
                         else:
                             self.win_rates[current_champ] = [0, 1]
-            # Todo Remove
-            print('win rates:', self.win_rates)
 
     def populate_all_champion_win_rates(self):
-        df = pandas.read_csv('winrate_csv/' + summoner_1.name + 'all_champions_win_rates.csv')
-
-
+        df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
 
     def save_win_rates(self):
 
@@ -822,18 +829,23 @@ class AllChampionsGui(Screen):
 
         column_1 = []
         column_2 = []
+        column_3 = datetime.datetime.now()
+
         for entry in self.win_rates:
             champion_name = champion_id_to_name.get(str(entry))
             column_1.append(champion_name)
             column_2.append(self.win_rates[entry])
 
             data = {'champion_name': column_1, 'win_rate': column_2}
+        data['date'] = column_3
 
-        # Removes the old file before creating a new one
-        os.remove(summoners_path + '/all_champions_win_rates.csv')
+        # If data is not found for the summoner
+        if os.path.isfile(summoners_path + '/all_champions_win_rates.csv'):
+            # Removes the old file before creating a new one
+            os.remove(summoners_path + '/all_champions_win_rates.csv')
 
         df = pandas.DataFrame(data=data)
-        df.to_csv(summoners_path + '/all_champions_win_rates.csv', header=['champion_name', 'win_rates'], index=False)
+        df.to_csv(summoners_path + '/all_champions_win_rates.csv', header=['champion_name', 'win_rates', 'date'], index=False)
 
 # ==========================================================================================
 #       Single Champion Gui: All stats about a single champion the summoner plays
