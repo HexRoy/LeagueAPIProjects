@@ -27,7 +27,7 @@ import datetime
 
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-83406719-be34-4eba-8694-b20cc00c40b7"
+DevelopmentAPIKey = "RGAPI-13c27387-4b5c-4d75-8cad-1874ea63c26a"
 cass.set_riot_api_key(DevelopmentAPIKey)
 
 # Todo
@@ -746,13 +746,18 @@ class AllChampionsGui(Screen):
         :param args:
         :return:
         """
-        # Clears win rates dictionary from previous loads
+        # Clears win rates dictionary and previous loads
         self.win_rates = {}
+        self.all_champions_grid_layout.clear_widgets()
 
         self.account_url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=420&endIndex=0&api_key=" + str(DevelopmentAPIKey)
         account_details = requests.get(self.account_url)
         account_details = account_details.json()
         total_games = account_details['totalGames']
+
+        # Todo: total games is not correct value
+        print(total_games)
+
 
         summoners_path = 'winrate_csv/' + summoner_1.name
 
@@ -787,6 +792,7 @@ class AllChampionsGui(Screen):
 
             # Todo Using sleep to delay the calls to riot api
             sleep(1.3)
+
             print('sleeping 1.3 seconds')
 
             current_champ = match['champion']
@@ -813,7 +819,36 @@ class AllChampionsGui(Screen):
                             self.win_rates[current_champ] = [0, 1]
 
     def populate_all_champion_win_rates(self):
+
         df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
+        last_updated = None
+        for index, line in df.iterrows():
+
+            # Champion Name + Icon
+            champion_name = line['champion_name']
+            if not pandas.isna(line['champion_name']):
+                champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/' + champion_name + '.png',
+                                       size_hint=(None, None), height=self.height / 8)
+            else:
+                champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/None.png', size_hint=(None, None), height=self.height / 8)
+            champion_name_label = Label(text=str(champion_name))
+
+            # Win Rate
+            win_rate = line['win_rates']
+            # Converts the string representation of a list, to a list
+            win_rate = win_rate.strip('][').split(',')
+            if win_rate[1] == 0:
+                calculated_win_rate = 'Infinite'
+            else:
+                calculated_win_rate = str(round(((int(win_rate[0]) / (int(win_rate[0]) + int(win_rate[1]))) * 100), 2), )
+
+            win_rate_label = Label(text=calculated_win_rate, size_hint=(None, None), height=self.height/8)
+
+            self.all_champions_grid_layout.add_widget(champion_name_label)
+            self.all_champions_grid_layout.add_widget(champion_image)
+            self.all_champions_grid_layout.add_widget(win_rate_label)
+
+
 
     def save_win_rates(self):
 

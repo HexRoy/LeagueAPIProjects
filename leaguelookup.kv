@@ -396,23 +396,26 @@ GuiManager:
         pos_hint: {'top': .7}
         GridLayout:
             id: allChampionsGridLayout
-            cols: 4
+            cols: 3
+            height: self.minimum_height
+            size_hint: 1, None
+            spacing: self.width/16 , 20
 
-            Button:
-                text: 'View'
-            Label:
-                text: 'Skarner'
-            Image:
-                source:
-                    'data_dragon_10.14.1/10.14.1/img/champion/Skarner.png'
-            Label:
-                canvas.before:
-                    Color:
-                        rgba: 1,.5,0,1
-                    Rectangle:
-                        pos: self.pos
-                        size: self.size
-                text: '60%'
+#            Button:
+#                text: 'View'
+#            Label:
+#                text: 'Skarner'
+#            Image:
+#                source:
+#                    'data_dragon_10.14.1/10.14.1/img/champion/Skarner.png'
+#            Label:
+#                canvas.before:
+#                    Color:
+#                        rgba: 1,.5,0,1
+#                    Rectangle:
+#                        pos: self.pos
+#                        size: self.size
+#                text: '60%'
 
 #25%  rgba: 1,0,0,1
 #
