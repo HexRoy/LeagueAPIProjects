@@ -49,12 +49,11 @@ cass.set_riot_api_key(DevelopmentAPIKey)
 #   Match GUI
 #       Add view summoner button next to other summoners in the game
 #   Ranked: solo
-#       Match history of ranked solo games
+#       Add expand view to add more games, and throttling when loading to avoid timeout
 #   Ranked: flex
-#        Match history of ranked flex games
+#       Add expand view to add more games, and throttling when loading to avoid timeout
 #   Champions
-#       Scroll view of all champions that you have played win rates
-#       Add a csv file to save all data, only update it if there is none existing or you hit update
+#       Add filtering by season
 #   Single Champion
 #       win rates on one champion vs every champion you have played against
 #   Live Game
