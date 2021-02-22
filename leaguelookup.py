@@ -27,7 +27,7 @@ import datetime
 
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-13c27387-4b5c-4d75-8cad-1874ea63c26a"
+DevelopmentAPIKey = "RGAPI-f59e2745-3dee-408d-85c4-203fb4ed861f"
 cass.set_riot_api_key(DevelopmentAPIKey)
 
 # Todo
@@ -750,15 +750,6 @@ class AllChampionsGui(Screen):
         self.win_rates = {}
         self.all_champions_grid_layout.clear_widgets()
 
-        self.account_url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=420&endIndex=0&api_key=" + str(DevelopmentAPIKey)
-        account_details = requests.get(self.account_url)
-        account_details = account_details.json()
-        total_games = account_details['totalGames']
-
-        # Todo: total games is not correct value
-        print(total_games)
-
-
         summoners_path = 'winrate_csv/' + summoner_1.name
 
         # If no directory is found for the summoner, creates one
@@ -767,56 +758,72 @@ class AllChampionsGui(Screen):
 
         # If data is not found for the summoner
         if not os.path.isfile(summoners_path + '/all_champions_win_rates.csv'):
-            # Max games that can be retrieved at once is 100, if over that amount we need to make multiple calls
-            if total_games <= 100:
-                self.match_url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matchlists/by-account/' + summoner_1.account_id + '?queue=420&endIndex=' + str(total_games) + '&api_key=' + str(DevelopmentAPIKey)
-                match_history = requests.get(self.match_url)
-                match_history = match_history.json()
-                self.calculate_win_rates(match_history)
-                self.save_win_rates()
-            else:
-                pass
+
+            self.calculate_win_rates()
+            self.save_win_rates()
 
         self.populate_all_champion_win_rates()
 
-    def calculate_win_rates(self, match_data):
+    def calculate_win_rates(self):
         """
         calculate_win_rates - To calculate and update your champion win rates
-        :param match_data: json data of ~ 100 games
         :return:
         """
-        matches = match_data['matches']
 
-        # Loops through all matches in match_data
-        for match in matches:
+        # Epoch millisecond time when ranked season 2021 began
+        begin_time = 1610118000000
+        self.account_url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=420&beginTime=" + str(begin_time) + "&api_key=" + str(DevelopmentAPIKey)
 
-            # Todo Using sleep to delay the calls to riot api
-            sleep(1.3)
+        account_details = requests.get(self.account_url)
+        account_details = account_details.json()
+        total_games = account_details['totalGames']
+        begin_index = 0
 
-            print('sleeping 1.3 seconds')
+        test = 0
 
-            current_champ = match['champion']
-            game_id = str(match['gameId'])
+        while begin_index < total_games:
+            self.match_url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matchlists/by-account/' + summoner_1.account_id + '?queue=420&beginTime=' + str(begin_time) + '&beginIndex=' + str(begin_index) + '&api_key=' + str(DevelopmentAPIKey)
+            match_history = requests.get(self.match_url)
+            match_history = match_history.json()
 
-            match_lookup = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matches/' + game_id + '?api_key=' + str(DevelopmentAPIKey)
-            match_lookup = requests.get(match_lookup)
-            match_lookup = match_lookup.json()
+            matches = match_history['matches']
+            print('looped')
+            # Loops through all matches in match_data
+            for match in matches:
 
-            # Loops through each player in the match
-            for summoner in match_lookup['participants']:
-                if summoner['championId'] == current_champ:
-                    win = summoner['stats']['win']
+                # Todo Using sleep to delay the calls to riot api
+                sleep(2)
 
-                    if current_champ in self.win_rates:
-                        if win is True:
-                            self.win_rates[current_champ][0] = self.win_rates[current_champ][0]+1
+                print('sleeping 1.3 seconds')
+
+                current_champ = match['champion']
+                game_id = str(match['gameId'])
+
+                match_lookup = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matches/' + game_id + '?api_key=' + str(DevelopmentAPIKey)
+                match_lookup = requests.get(match_lookup)
+                match_lookup = match_lookup.json()
+
+                # Loops through each player in the match
+                for summoner in match_lookup['participants']:
+                    if summoner['championId'] == current_champ:
+                        win = summoner['stats']['win']
+
+                        if current_champ in self.win_rates:
+                            if win is True:
+                                self.win_rates[current_champ][0] = self.win_rates[current_champ][0]+1
+                            else:
+                                self.win_rates[current_champ][1] = self.win_rates[current_champ][1]+1
                         else:
-                            self.win_rates[current_champ][1] = self.win_rates[current_champ][1]+1
-                    else:
-                        if win is True:
-                            self.win_rates[current_champ] = [1, 0]
-                        else:
-                            self.win_rates[current_champ] = [0, 1]
+                            if win is True:
+                                self.win_rates[current_champ] = [1, 0]
+                            else:
+                                self.win_rates[current_champ] = [0, 1]
+
+                test += 1
+                print(test, current_champ, begin_index)
+            # Maximum number of games that can be loaded at once is 100
+            begin_index += 100
+
 
     def populate_all_champion_win_rates(self):
 
@@ -838,9 +845,9 @@ class AllChampionsGui(Screen):
             # Converts the string representation of a list, to a list
             win_rate = win_rate.strip('][').split(',')
             if win_rate[1] == 0:
-                calculated_win_rate = 'Infinite'
+                calculated_win_rate = 'Infinite: ' + str(win_rate)
             else:
-                calculated_win_rate = str(round(((int(win_rate[0]) / (int(win_rate[0]) + int(win_rate[1]))) * 100), 2), )
+                calculated_win_rate = str(round(((int(win_rate[0]) / (int(win_rate[0]) + int(win_rate[1]))) * 100), 2)) + ': ' + str(win_rate)
 
             win_rate_label = Label(text=calculated_win_rate, size_hint=(None, None), height=self.height/8)
 
@@ -865,7 +872,6 @@ class AllChampionsGui(Screen):
         column_1 = []
         column_2 = []
         column_3 = datetime.datetime.now()
-
         for entry in self.win_rates:
             champion_name = champion_id_to_name.get(str(entry))
             column_1.append(champion_name)
