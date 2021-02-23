@@ -833,6 +833,10 @@ class AllChampionsGui(Screen):
             begin_index += 100
 
     def populate_all_champion_win_rates(self):
+        """
+        populate_all_champion_win_rates: Adds champion data to the grid layout
+        :return:
+        """
 
         df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
         last_updated = None
@@ -849,25 +853,23 @@ class AllChampionsGui(Screen):
 
             # Converts the string representation of the win rate list list, to a list
             win_rate = line['win_rates']
-            win_rate = win_rate.strip('][').split(',')
+            wins = line['wins']
+            losses = line['losses']
+            total = int(wins) + int(losses)
 
-            if win_rate[1] == 0:
-                calculated_win_rate = 'Infinite: ' + str(win_rate)
-            else:
-                calculated_win_rate = round(((int(win_rate[0]) / (int(win_rate[0]) + int(win_rate[1]))) * 100), 2)
-            calculated_win_rate_text = str(calculated_win_rate) + ': (' + str(win_rate[0]) + ' /' + str(win_rate[1]) + ')'
+            calculated_win_rate_text = str(win_rate) + ' % : (' + str(wins) + ' / ' + str(total) + ')'
 
-            if calculated_win_rate <= 25:
+            if win_rate <= 25:
                 win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height/8, color=[1,0,0,1])
-            elif 25 <= calculated_win_rate <= 45:
+            elif 25 <= win_rate <= 45:
                 win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=[1,.5,0,1])
-            elif 45 <= calculated_win_rate <= 50:
+            elif 45 <= win_rate <= 50:
                 win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=[1,1,0,1])
-            elif 50 <= calculated_win_rate <= 55:
+            elif 50 <= win_rate <= 55:
                 win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=[.25,1,0,1])
-            elif 55 <= calculated_win_rate <= 60:
+            elif 55 <= win_rate <= 60:
                 win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=[0,1,0,1])
-            elif 60 <= calculated_win_rate <= 75:
+            elif 60 <= win_rate <= 75:
                 win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=[0,1,.5,1])
             else:
                 win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=[0,1,1,1])
@@ -882,18 +884,31 @@ class AllChampionsGui(Screen):
             self.all_champions_grid_layout.add_widget(win_rate_label)
 
     def save_win_rates(self):
+        """
+        save_win_rates: Saves all champion data to a single csv file in the summoner's name directory
+        :return:
+        """
 
         summoners_path = 'winrate_csv/' + summoner_1.name
 
-        column_1 = []
-        column_2 = []
-        column_3 = datetime.datetime.now()
-        for entry in self.win_rates:
-            column_1.append(entry)
-            column_2.append(self.win_rates[entry])
+        column_1 = []       # Champion Name
+        column_2 = []       # Win Rate
+        column_3 = []       # Wins
+        column_4 = []       # Losses
+        column_5 = datetime.datetime.now()
 
-            data = {'champion_name': column_1, 'win_rate': column_2}
-        data['date'] = column_3
+        for entry in self.win_rates:
+            wins = self.win_rates[entry][0]
+            losses = self.win_rates[entry][1]
+            win_rate = round(((int(wins) / (int(losses) + int(wins))) * 100), 2)
+
+            column_1.append(entry)
+            column_2.append(win_rate)
+            column_3.append(wins)
+            column_4.append(losses)
+
+            data = {'champion_name': column_1, 'win_rate': column_2, 'wins': column_3, 'losses': column_4}
+        data['date'] = column_5
 
         # If data is not found for the summoner
         if os.path.isfile(summoners_path + '/all_champions_win_rates.csv'):
@@ -901,10 +916,13 @@ class AllChampionsGui(Screen):
             os.remove(summoners_path + '/all_champions_win_rates.csv')
 
         df = pandas.DataFrame(data=data)
-        df.to_csv(summoners_path + '/all_champions_win_rates.csv', header=['champion_name', 'win_rates', 'date'], index=False)
+        df.to_csv(summoners_path + '/all_champions_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'date'], index=False)
 
     def sort_by_champion(self):
-        print('sorting')
+        """
+        sort_by_champion: Sorts all champions alphabetically by the champion name
+        :return:
+        """
         self.all_champions_grid_layout.clear_widgets()
         df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
         if self.champ_sort is False:
@@ -915,16 +933,31 @@ class AllChampionsGui(Screen):
             self.champ_sort = False
 
         os.remove('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
-        sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv', header=['champion_name', 'win_rates', 'date'], index=False)
+        sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'date'], index=False)
         self.populate_all_champion_win_rates()
 
-    def sort_by_winrate(self):
-        print('sorting')
+    def sort_by_win_rate(self):
+        """
+        sort_by_win_rate: Sorts all champions by their win rates
+        :return:
+        """
+        self.all_champions_grid_layout.clear_widgets()
+        df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
+        if self.win_rate_sort is False:
+            sorted_df = df.sort_values(by=["win_rates"], ascending=False)
+            self.win_rate_sort = True
+        else:
+            sorted_df = df.sort_values(by=["win_rates"], ascending=True)
+            self.win_rate_sort = False
+        os.remove('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
+        sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'date'], index=False)
+        self.populate_all_champion_win_rates()
 
     def single_champion(self, button):
         #summoner_1.current_match_id = button.id
         #self.parent.current = "Single_champion"
         pass
+
 
 # ==========================================================================================
 #       Single Champion Gui: All stats about a single champion the summoner plays
