@@ -331,6 +331,7 @@ GuiManager:
                 Label
                     text: "Towers"
 
+        # Back Button
         Button:
             pos_hint: {"bottom":.5}
             size_hint: 1, .15
@@ -384,48 +385,32 @@ GuiManager:
         cols: 3
         pos_hint: {'top': .8}
         size_hint: 1, .05
+
+        # Back Button
         Button:
             text: '<- Back'
+            on_release:
+                app.root.current = 'profile'
+                app.root.transition.direction = "right"
+
+        # Sort by champion name
         Button:
             text: 'Champion'
+            on_release:
+                root.sort_by_champion()
+
+        # Sort by champion win rate
         Button:
             text: 'Win Rate'
+            on_release:
+                root.sort_by_winrate()
 
     ScrollView:
         size_hint: 1, .65
         pos_hint: {'top': .7}
         GridLayout:
             id: allChampionsGridLayout
-            cols: 3
+            cols: 4
             height: self.minimum_height
             size_hint: 1, None
             spacing: self.width/16 , 20
-
-#            Button:
-#                text: 'View'
-#            Label:
-#                text: 'Skarner'
-#            Image:
-#                source:
-#                    'data_dragon_10.14.1/10.14.1/img/champion/Skarner.png'
-#            Label:
-#                canvas.before:
-#                    Color:
-#                        rgba: 1,.5,0,1
-#                    Rectangle:
-#                        pos: self.pos
-#                        size: self.size
-#                text: '60%'
-
-#25%  rgba: 1,0,0,1
-#
-#40%  rgba: 1,.5,0,1
-#45%  rgba: 1,1,0,1
-#
-#50%  rgba: .25,1,0,1
-#
-#55%  rgba: 0,1,0,1
-#60%  rgba: 0,1,.5,1
-#
-#75%  rgba: 0,1,1,1
-
