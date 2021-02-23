@@ -837,18 +837,32 @@ class AllChampionsGui(Screen):
                                        size_hint=(None, None), height=self.height / 8)
             else:
                 champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/None.png', size_hint=(None, None), height=self.height / 8)
-            champion_name_label = Label(text=str(champion_name))
+            champion_name_label = Label(text=str(champion_name), size_hint=(None, None), height=self.height/8)
 
-            # Win Rate
+            # Converts the string representation of the win rate list list, to a list
             win_rate = line['win_rates']
-            # Converts the string representation of a list, to a list
             win_rate = win_rate.strip('][').split(',')
+
             if win_rate[1] == 0:
                 calculated_win_rate = 'Infinite: ' + str(win_rate)
             else:
-                calculated_win_rate = str(round(((int(win_rate[0]) / (int(win_rate[0]) + int(win_rate[1]))) * 100), 2)) + ': ' + str(win_rate)
+                calculated_win_rate = round(((int(win_rate[0]) / (int(win_rate[0]) + int(win_rate[1]))) * 100), 2)
+            calculated_win_rate_text = str(calculated_win_rate) + ': (' + str(win_rate[0]) + ' /' + str(win_rate[1]) + ')'
 
-            win_rate_label = Label(text=calculated_win_rate, size_hint=(None, None), height=self.height/8)
+            if calculated_win_rate <= 25:
+                win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height/8, color=[1,0,0,1])
+            elif 25 <= calculated_win_rate <= 45:
+                win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=[1,.5,0,1])
+            elif 45 <= calculated_win_rate <= 50:
+                win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=[1,1,0,1])
+            elif 50 <= calculated_win_rate <= 55:
+                win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=[.25,1,0,1])
+            elif 55 <= calculated_win_rate <= 60:
+                win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=[0,1,0,1])
+            elif 60 <= calculated_win_rate <= 75:
+                win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=[0,1,.5,1])
+            else:
+                win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=[0,1,1,1])
 
             self.all_champions_grid_layout.add_widget(champion_name_label)
             self.all_champions_grid_layout.add_widget(champion_image)
