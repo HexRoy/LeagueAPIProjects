@@ -27,7 +27,7 @@ import datetime
 
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-0ddcc045-f285-4e89-ac8b-bc91003685d2"
+DevelopmentAPIKey = ""
 cass.set_riot_api_key(DevelopmentAPIKey)
 
 # Todo
@@ -801,7 +801,7 @@ class AllChampionsGui(Screen):
 
                 # Todo Using sleep to delay the calls to riot api
                 sleep(2)
-                print('sleeping 1.3 seconds')
+                print('sleeping 2 seconds')
 
                 current_champ = match['champion']
                 current_champion_name = champion_id_to_name.get(str(current_champ))
@@ -860,20 +860,21 @@ class AllChampionsGui(Screen):
             calculated_win_rate_text = str(win_rate) + ' % : (' + str(wins) + ' / ' + str(total) + ')'
 
             if win_rate <= 25:
-                win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height/8, color=[1,0,0,1])
+                color = [1, 0, 0, 1]
             elif 25 <= win_rate <= 45:
-                win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=[1,.5,0,1])
+                color = [1, .5, 0, 1]
             elif 45 <= win_rate <= 50:
-                win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=[1,1,0,1])
+                color = [1, 1, 0, 1]
             elif 50 <= win_rate <= 55:
-                win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=[.25,1,0,1])
+                color = [.25, 1, 0, 1]
             elif 55 <= win_rate <= 60:
-                win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=[0,1,0,1])
+                color = [0, 1, 0, 1]
             elif 60 <= win_rate <= 75:
-                win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=[0,1,.5,1])
+                color = [0, 1, .5, 1]
             else:
-                win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=[0,1,1,1])
+                color = [0, 1, 1, 1]
 
+            win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=color)
             view_button = Button(text="View", size_hint=(None, None), height=self.height / 8, width=self.width / 9)
             view_button.id = str(champion_name)
             view_button.bind(on_press=partial(self.single_champion))
@@ -910,7 +911,7 @@ class AllChampionsGui(Screen):
             data = {'champion_name': column_1, 'win_rate': column_2, 'wins': column_3, 'losses': column_4}
         data['date'] = column_5
 
-        # If data is not found for the summoner
+        # If data is found for the summoner
         if os.path.isfile(summoners_path + '/all_champions_win_rates.csv'):
             # Removes the old file before creating a new one
             os.remove(summoners_path + '/all_champions_win_rates.csv')
@@ -954,9 +955,8 @@ class AllChampionsGui(Screen):
         self.populate_all_champion_win_rates()
 
     def single_champion(self, button):
-        #summoner_1.current_match_id = button.id
-        #self.parent.current = "Single_champion"
-        pass
+        summoner_1.current_champion = button.id
+        self.parent.current = "singleChampion"
 
 
 # ==========================================================================================
@@ -965,6 +965,227 @@ class AllChampionsGui(Screen):
 class SingleChampionGui(Screen):
     def __init__(self, **kwargs):
         super(Screen, self).__init__(**kwargs)
+        self.win_rates = None
+        self.champ_sort = False
+        self.win_rate_sort = False
+
+    def on_enter(self, *args):
+        """
+        on_enter: Determines what happens when entering the singleChampionGui page
+        :param args:
+        :return:
+        """
+        # Clears win rates dictionary and previous loads
+        self.win_rates = {}
+        self.single_champion_grid_layout.clear_widgets()
+
+        summoners_path = 'winrate_csv/' + summoner_1.name
+
+        # If no directory is found for the summoner, creates one
+        if not os.path.isdir(summoners_path):
+            os.mkdir(summoners_path)
+
+        # If data is not found for the summoner
+        if not os.path.isfile(summoners_path + '/' + summoner_1.current_champion + '_win_rates.csv'):
+
+            self.calculate_win_rates()
+            self.save_win_rates()
+
+        self.populate_single_champion_win_rates()
+
+    def calculate_win_rates(self):
+        """
+        calculate_win_rates - To calculate and update your champion win rates
+        :return:
+        """
+        # Creates champion name to id conversion
+        with open('data_dragon_10.14.1/10.14.1/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
+            champion_dict = json.load(champion_data)
+        champion_id_to_name = {}
+        for key in champion_dict['data']:
+            row = champion_dict['data'][key]
+            champion_id_to_name[row['key']] = row['id']
+
+        # Convert the champion name to champion id
+        champion_id = champion_dict['data'][summoner_1.current_champion]['key']
+
+        # Epoch millisecond time when ranked season 2021 began
+        begin_time = 1610118000000
+        url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?champion=" + str(champion_id) + "&queue=420&beginTime=" + str(begin_time) + "&api_key=" + str(DevelopmentAPIKey)
+
+        account_details = requests.get(url)
+        account_details = account_details.json()
+        total_games = account_details['totalGames']
+        begin_index = 0
+
+        # Loops through the sets of 100 games
+        while begin_index < total_games:
+            indexed_url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matchlists/by-account/' + summoner_1.account_id + '?champion=' + str(champion_id) + '&queue=420&beginTime=' + str(begin_time) + '&beginIndex=' + str(begin_index) + '&api_key=' + str(DevelopmentAPIKey)
+            match_history = requests.get(indexed_url)
+            match_history = match_history.json()
+            matches = match_history['matches']
+
+            # Loops through all matches in match_data
+            for match in matches:
+
+                # Todo Using sleep to delay the calls to riot api
+                sleep(2)
+                print('sleeping 2 seconds')
+
+                current_champ = match['champion']
+                current_champion_name = champion_id_to_name.get(str(current_champ))
+
+                game_id = str(match['gameId'])
+
+                match_lookup = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matches/' + game_id + '?api_key=' + str(
+                    DevelopmentAPIKey)
+                match_lookup = requests.get(match_lookup)
+                match_lookup = match_lookup.json()
+
+                # Win is used to find the opposing team (the inverse of whatever win is)
+                win = None
+
+                # Loops through each player in the match
+                for summoner in match_lookup['participants']:
+                    if summoner['championId'] == current_champ:
+                        win = summoner['stats']['win']
+
+                # Loops through each player in the match a second time now know which team has the enemies
+                for summoner in match_lookup['participants']:
+                    if summoner['stats']['win'] is not win:
+                        enemy_champ = champion_id_to_name.get(str(summoner['championId']))
+
+                        if enemy_champ in self.win_rates:
+                            if win is True:
+                                self.win_rates[enemy_champ][0] = self.win_rates[enemy_champ][0] + 1
+                            else:
+                                self.win_rates[enemy_champ][1] = self.win_rates[enemy_champ][1] + 1
+                        else:
+                            if win is True:
+                                self.win_rates[enemy_champ] = [1, 0]
+                            else:
+                                self.win_rates[enemy_champ] = [0, 1]
+
+            # Maximum number of games that can be loaded at once is 100
+            begin_index += 100
+
+    def save_win_rates(self):
+        """
+        save_win_rates: Saves single champion data to a single csv file in the summoner's name directory
+        :return:
+        """
+
+        summoners_path = 'winrate_csv/' + summoner_1.name
+
+        column_1 = []       # Champion Name
+        column_2 = []       # Win Rate
+        column_3 = []       # Wins
+        column_4 = []       # Losses
+        column_5 = datetime.datetime.now()
+
+        for entry in self.win_rates:
+            wins = self.win_rates[entry][0]
+            losses = self.win_rates[entry][1]
+            win_rate = round(((int(wins) / (int(losses) + int(wins))) * 100), 2)
+
+            column_1.append(entry)
+            column_2.append(win_rate)
+            column_3.append(wins)
+            column_4.append(losses)
+
+            data = {'champion_name': column_1, 'win_rate': column_2, 'wins': column_3, 'losses': column_4}
+        data['date'] = column_5
+
+        # If data is found for the summoner
+        if os.path.isfile(summoners_path + '/' + summoner_1.current_champion + '_win_rates.csv'):
+            # Removes the old file before creating a new one
+            os.remove(summoners_path + '/' + summoner_1.current_champion + '_win_rates.csv')
+
+        df = pandas.DataFrame(data=data)
+        df.to_csv(summoners_path + '/' + summoner_1.current_champion + '_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'date'], index=False)
+
+    def populate_single_champion_win_rates(self):
+        """
+        populate_single_champion_win_rates: Adds champion data to the grid layout
+        :return:
+        """
+
+        df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv')
+        last_updated = None
+        for index, line in df.iterrows():
+
+            # Champion Name + Icon
+            champion_name = line['champion_name']
+            if not pandas.isna(line['champion_name']):
+                champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/' + champion_name + '.png',
+                                       size_hint=(None, None), height=self.height / 8)
+            else:
+                champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/None.png', size_hint=(None, None), height=self.height / 8)
+            champion_name_label = Label(text=str(champion_name), size_hint=(None, None), height=self.height/8)
+
+            # Converts the string representation of the win rate list list, to a list
+            win_rate = line['win_rates']
+            wins = line['wins']
+            losses = line['losses']
+            total = int(wins) + int(losses)
+
+            calculated_win_rate_text = str(win_rate) + ' % : (' + str(wins) + ' / ' + str(total) + ')'
+
+            if win_rate <= 25:
+                color = [1, 0, 0, 1]
+            elif 25 <= win_rate <= 45:
+                color = [1, .5, 0, 1]
+            elif 45 <= win_rate <= 50:
+                color = [1, 1, 0, 1]
+            elif 50 <= win_rate <= 55:
+                color = [.25, 1, 0, 1]
+            elif 55 <= win_rate <= 60:
+                color = [0, 1, 0, 1]
+            elif 60 <= win_rate <= 75:
+                color = [0, 1, .5, 1]
+            else:
+                color = [0, 1, 1, 1]
+
+            win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=color)
+
+            self.single_champion_grid_layout.add_widget(champion_name_label)
+            self.single_champion_grid_layout.add_widget(champion_image)
+            self.single_champion_grid_layout.add_widget(win_rate_label)
+
+    def sort_by_champion(self):
+        """
+        sort_by_champion: Sorts all champions alphabetically by the champion name
+        :return:
+        """
+        self.single_champion_grid_layout.clear_widgets()
+        df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv')
+        if self.champ_sort is False:
+            sorted_df = df.sort_values(by=["champion_name"], ascending=True)
+            self.champ_sort = True
+        else:
+            sorted_df = df.sort_values(by=["champion_name"], ascending=False)
+            self.champ_sort = False
+
+        os.remove('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv')
+        sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'date'], index=False)
+        self.populate_single_champion_win_rates()
+
+    def sort_by_win_rate(self):
+        """
+        sort_by_win_rate: Sorts all champions by their win rates
+        :return:
+        """
+        self.single_champion_grid_layout.clear_widgets()
+        df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv')
+        if self.win_rate_sort is False:
+            sorted_df = df.sort_values(by=["win_rates"], ascending=False)
+            self.win_rate_sort = True
+        else:
+            sorted_df = df.sort_values(by=["win_rates"], ascending=True)
+            self.win_rate_sort = False
+        os.remove('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv')
+        sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'date'], index=False)
+        self.populate_single_champion_win_rates()
 
 
 # ==========================================================================================
@@ -1009,6 +1230,7 @@ class Summoner:
         self.flex_hot_streak = None
 
         self.current_match_id = None
+        self.current_champion = None
 
     def set_summoner_data(self):
         summoner_1.name = summoner_1.summoner_data['name']

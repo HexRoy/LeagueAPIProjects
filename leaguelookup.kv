@@ -4,7 +4,7 @@ GuiManager:
     MatchGui:
     SettingsGui:
     AllChampionsGui:
-    #SingleChampionGui:
+    SingleChampionGui:
 
 # ==========================================================================================
 #       Home Gui: Contains summoner lookup, region selection, and favorites
@@ -411,6 +411,62 @@ GuiManager:
         GridLayout:
             id: allChampionsGridLayout
             cols: 4
+            height: self.minimum_height
+            size_hint: 1, None
+            spacing: self.width/16 , 20
+
+
+# ==========================================================================================
+#       Single Champion Gui: All Champions stats for a summoner
+# ==========================================================================================
+<singleChampionGui>:
+    name: 'singleChampion'
+    single_champion_grid_layout: singleChampionGridLayout
+    canvas:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            source: "images/background.png"
+
+    Button:
+        pos_hint: {"top":1}
+        size_hint: 1, .15
+        background_normal: "images/logo.png"
+        on_release:
+            app.root.current = "home"
+            app.root.transition.direction = "right"
+
+    # Labels
+    GridLayout:
+        cols: 3
+        pos_hint: {'top': .8}
+        size_hint: 1, .05
+
+        # Back Button
+        Button:
+            text: '<- Back'
+            on_release:
+                app.root.current = 'allChampions'
+                app.root.transition.direction = "right"
+
+        # Sort by champion name
+        Button:
+            text: 'Champion'
+            on_release:
+                root.sort_by_champion()
+
+        # Sort by champion win rate
+        Button:
+            text: 'Win Rate'
+            on_release:
+                root.sort_by_win_rate()
+
+    ScrollView:
+        size_hint: 1, .65
+        pos_hint: {'top': .7}
+        GridLayout:
+            id: singleChampionGridLayout
+            cols: 3
             height: self.minimum_height
             size_hint: 1, None
             spacing: self.width/16 , 20
