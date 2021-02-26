@@ -27,7 +27,7 @@ import datetime
 
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = ""
+DevelopmentAPIKey = "RGAPI-c0b2e5c5-577d-4142-b11e-b24f0323e9d5"
 cass.set_riot_api_key(DevelopmentAPIKey)
 
 # Todo
@@ -740,6 +740,7 @@ class AllChampionsGui(Screen):
         self.win_rates = {}
         self.champ_sort = False
         self.win_rate_sort = False
+        self.last_update = None
 
     def on_enter(self, *args):
         """
@@ -855,9 +856,11 @@ class AllChampionsGui(Screen):
             win_rate = line['win_rates']
             wins = line['wins']
             losses = line['losses']
-            total = int(wins) + int(losses)
 
-            calculated_win_rate_text = str(win_rate) + ' % : (' + str(wins) + ' / ' + str(total) + ')'
+            date = line['date']
+            self.last_update = date
+
+            calculated_win_rate_text = str(win_rate) + ' % : (' + str(wins) + ' / ' + str(losses) + ')'
 
             if win_rate <= 25:
                 color = [1, 0, 0, 1]
@@ -896,7 +899,7 @@ class AllChampionsGui(Screen):
         column_2 = []       # Win Rate
         column_3 = []       # Wins
         column_4 = []       # Losses
-        column_5 = datetime.datetime.now()
+        column_5 = datetime.datetime.now().timestamp() * 1000.0
 
         for entry in self.win_rates:
             wins = self.win_rates[entry][0]
@@ -955,8 +958,21 @@ class AllChampionsGui(Screen):
         self.populate_all_champion_win_rates()
 
     def single_champion(self, button):
+        """
+        single_champion: Changes the screen to the single champion screen
+        :param button:
+        :return:
+        """
         summoner_1.current_champion = button.id
         self.parent.current = "singleChampion"
+
+    def update_all_champions(self):
+        """
+        update_all_champions: Updates the all_champions csv file based on the last date saved
+        :return:
+        """
+        print(self.last_update)
+        print(type(self.last_update))
 
 
 # ==========================================================================================
@@ -1081,7 +1097,7 @@ class SingleChampionGui(Screen):
         column_2 = []       # Win Rate
         column_3 = []       # Wins
         column_4 = []       # Losses
-        column_5 = datetime.datetime.now()
+        column_5 = datetime.datetime.now().timestamp() * 1000.0
 
         for entry in self.win_rates:
             wins = self.win_rates[entry][0]
@@ -1127,9 +1143,8 @@ class SingleChampionGui(Screen):
             win_rate = line['win_rates']
             wins = line['wins']
             losses = line['losses']
-            total = int(wins) + int(losses)
 
-            calculated_win_rate_text = str(win_rate) + ' % : (' + str(wins) + ' / ' + str(total) + ')'
+            calculated_win_rate_text = str(win_rate) + ' % : (' + str(wins) + ' / ' + str(losses) + ')'
 
             if win_rate <= 25:
                 color = [1, 0, 0, 1]
