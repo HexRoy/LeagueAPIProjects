@@ -444,7 +444,7 @@ GuiManager:
 
     # Labels
     GridLayout:
-        cols: 3
+        cols: 4
         pos_hint: {'top': .8}
         size_hint: 1, .05
 
@@ -466,6 +466,12 @@ GuiManager:
             text: 'Win Rate'
             on_release:
                 root.sort_by_win_rate()
+
+        # Check for new data
+        Button:
+            text: 'Update'
+            on_release:
+                root.update_single_champion()
 
     ScrollView:
         size_hint: 1, .65

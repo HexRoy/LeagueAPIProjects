@@ -27,7 +27,7 @@ import datetime
 
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-c0b2e5c5-577d-4142-b11e-b24f0323e9d5"
+DevelopmentAPIKey = "RGAPI-e3cb823a-bf40-48bd-98e6-3fbdeb4bcaa2"
 cass.set_riot_api_key(DevelopmentAPIKey)
 
 # Todo
@@ -54,8 +54,10 @@ cass.set_riot_api_key(DevelopmentAPIKey)
 #       Add expand view to add more games, and throttling when loading to avoid timeout
 #   Champions
 #       Add filtering by season
+#       Create no new games popup
 #   Single Champion
 #       win rates on one champion vs every champion you have played against
+#       Create no new games popup
 #   Live Game
 #   CRASH : something to do with time duration of a match (possibly aram games have a different variable)
 #   Fix: transition directions for each screen
@@ -740,7 +742,10 @@ class AllChampionsGui(Screen):
         self.win_rates = {}
         self.champ_sort = False
         self.win_rate_sort = False
-        self.last_update = None
+        self.no_new_data = False
+
+        # Beginning of season 11 - Epoch millisecond
+        self.last_update = 1610118000000
 
     def on_enter(self, *args):
         """
@@ -749,7 +754,6 @@ class AllChampionsGui(Screen):
         :return:
         """
         # Clears win rates dictionary and previous loads
-        self.win_rates = {}
         self.all_champions_grid_layout.clear_widgets()
 
         summoners_path = 'winrate_csv/' + summoner_1.name
@@ -772,66 +776,88 @@ class AllChampionsGui(Screen):
         :return:
         """
 
-        # Epoch millisecond time when ranked season 2021 began
-        begin_time = 1610118000000
-        self.account_url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=420&beginTime=" + str(begin_time) + "&api_key=" + str(DevelopmentAPIKey)
+        # Clears any previous temp data
+        self.win_rates = {}
+
+        # If there is saved data
+        if os.path.isfile('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv'):
+            df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
+            for index, line in df.iterrows():
+
+                if not pandas.isna(line['champion_name']):
+                    champion_name = 'None'
+                else:
+                    champion_name = line['champion_name']
+                wins = line['wins']
+                losses = line['losses']
+                self.win_rates[champion_name] = [wins, losses]
+
+        self.account_url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=420&beginTime=" + str(self.last_update) + "&api_key=" + str(DevelopmentAPIKey)
 
         account_details = requests.get(self.account_url)
-        account_details = account_details.json()
-        total_games = account_details['totalGames']
-        begin_index = 0
 
-        # Creates a champion id to name conversion dictionary
-        with open('data_dragon_10.14.1/10.14.1/data/en_US/champion.json', 'r',
-                  encoding="utf-8") as champion_data:
-            champion_dict = json.load(champion_data)
-        champion_id_to_name = {}
-        for key in champion_dict['data']:
-            row = champion_dict['data'][key]
-            champion_id_to_name[row['key']] = row['id']
+        # Checking for 404 error: no new data
+        status = account_details.status_code
 
-        # Loops through the sets of 100 games
-        while begin_index < total_games:
-            self.match_url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matchlists/by-account/' + summoner_1.account_id + '?queue=420&beginTime=' + str(begin_time) + '&beginIndex=' + str(begin_index) + '&api_key=' + str(DevelopmentAPIKey)
-            match_history = requests.get(self.match_url)
-            match_history = match_history.json()
-            matches = match_history['matches']
+        if status != 404:
+            account_details = account_details.json()
+            total_games = account_details['totalGames']
+            begin_index = 0
 
-            # Loops through all matches in match_data
-            for match in matches:
+            # Creates a champion id to name conversion dictionary
+            with open('data_dragon_10.14.1/10.14.1/data/en_US/champion.json', 'r',
+                      encoding="utf-8") as champion_data:
+                champion_dict = json.load(champion_data)
+            champion_id_to_name = {}
+            for key in champion_dict['data']:
+                row = champion_dict['data'][key]
+                champion_id_to_name[row['key']] = row['id']
 
-                # Todo Using sleep to delay the calls to riot api
-                sleep(2)
-                print('sleeping 2 seconds')
+            # Loops through the sets of 100 games
+            while begin_index < total_games:
+                self.match_url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matchlists/by-account/' + summoner_1.account_id + '?queue=420&beginTime=' + str(self.last_update) + '&beginIndex=' + str(begin_index) + '&api_key=' + str(DevelopmentAPIKey)
+                match_history = requests.get(self.match_url)
+                match_history = match_history.json()
+                matches = match_history['matches']
 
-                current_champ = match['champion']
-                current_champion_name = champion_id_to_name.get(str(current_champ))
+                # Loops through all matches in match_data
+                for match in matches:
 
-                game_id = str(match['gameId'])
+                    # Todo Using sleep to delay the calls to riot api
+                    sleep(2)
+                    print('sleeping 2 seconds')
 
-                match_lookup = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matches/' + game_id + '?api_key=' + str(DevelopmentAPIKey)
-                match_lookup = requests.get(match_lookup)
-                match_lookup = match_lookup.json()
+                    current_champ = match['champion']
+                    current_champion_name = champion_id_to_name.get(str(current_champ))
 
-                # Loops through each player in the match
-                for summoner in match_lookup['participants']:
-                    if summoner['championId'] == current_champ:
-                        win = summoner['stats']['win']
+                    game_id = str(match['gameId'])
 
-                        if current_champion_name in self.win_rates:
-                            if win is True:
-                                self.win_rates[current_champion_name][0] = self.win_rates[current_champion_name][0]+1
+                    match_lookup = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matches/' + game_id + '?api_key=' + str(DevelopmentAPIKey)
+                    match_lookup = requests.get(match_lookup)
+                    match_lookup = match_lookup.json()
+
+                    # Loops through each player in the match
+                    for summoner in match_lookup['participants']:
+                        if summoner['championId'] == current_champ:
+                            win = summoner['stats']['win']
+
+                            if current_champion_name in self.win_rates:
+                                if win is True:
+                                    self.win_rates[current_champion_name][0] = self.win_rates[current_champion_name][0]+1
+                                else:
+                                    self.win_rates[current_champion_name][1] = self.win_rates[current_champion_name][1]+1
                             else:
-                                self.win_rates[current_champion_name][1] = self.win_rates[current_champion_name][1]+1
-                        else:
-                            if win is True:
-                                self.win_rates[current_champion_name] = [1, 0]
-                            else:
-                                self.win_rates[current_champion_name] = [0, 1]
+                                if win is True:
+                                    self.win_rates[current_champion_name] = [1, 0]
+                                else:
+                                    self.win_rates[current_champion_name] = [0, 1]
 
-                print(current_champ, begin_index)
-            # Maximum number of games that can be loaded at once is 100
-            begin_index += 100
+                    print(current_champ, begin_index)
+                # Maximum number of games that can be loaded at once is 100
+                begin_index += 100
+
+            else:
+                self.no_new_data = True
 
     def populate_all_champion_win_rates(self):
         """
@@ -840,7 +866,6 @@ class AllChampionsGui(Screen):
         """
 
         df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
-        last_updated = None
         for index, line in df.iterrows():
 
             # Champion Name + Icon
@@ -856,9 +881,6 @@ class AllChampionsGui(Screen):
             win_rate = line['win_rates']
             wins = line['wins']
             losses = line['losses']
-
-            date = line['date']
-            self.last_update = date
 
             calculated_win_rate_text = str(win_rate) + ' % : (' + str(wins) + ' / ' + str(losses) + ')'
 
@@ -899,7 +921,7 @@ class AllChampionsGui(Screen):
         column_2 = []       # Win Rate
         column_3 = []       # Wins
         column_4 = []       # Losses
-        column_5 = datetime.datetime.now().timestamp() * 1000.0
+        column_5 = round(datetime.datetime.now().timestamp() * 1000.0)
 
         for entry in self.win_rates:
             wins = self.win_rates[entry][0]
@@ -913,6 +935,8 @@ class AllChampionsGui(Screen):
 
             data = {'champion_name': column_1, 'win_rate': column_2, 'wins': column_3, 'losses': column_4}
         data['date'] = column_5
+
+
 
         # If data is found for the summoner
         if os.path.isfile(summoners_path + '/all_champions_win_rates.csv'):
@@ -971,9 +995,20 @@ class AllChampionsGui(Screen):
         update_all_champions: Updates the all_champions csv file based on the last date saved
         :return:
         """
-        print(self.last_update)
-        print(type(self.last_update))
+        df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
+        date = None
+        for index, line in df.iterrows():
+            date = line['date']
+        if date is not None:
+            self.last_update = date
+        else:
+            print("Error: Date is none")
+            exit(1)
 
+        self.calculate_win_rates()
+        if self.no_new_data is False:
+            self.save_win_rates()
+            self.populate_all_champion_win_rates()
 
 # ==========================================================================================
 #       Single Champion Gui: All stats about a single champion the summoner plays
@@ -985,6 +1020,12 @@ class SingleChampionGui(Screen):
         self.champ_sort = False
         self.win_rate_sort = False
 
+        self.no_new_data = False
+
+        # When season 11 started - Epoch millisecond
+        self.last_update = 1610118000000
+
+
     def on_enter(self, *args):
         """
         on_enter: Determines what happens when entering the singleChampionGui page
@@ -992,7 +1033,6 @@ class SingleChampionGui(Screen):
         :return:
         """
         # Clears win rates dictionary and previous loads
-        self.win_rates = {}
         self.single_champion_grid_layout.clear_widgets()
 
         summoners_path = 'winrate_csv/' + summoner_1.name
@@ -1014,6 +1054,10 @@ class SingleChampionGui(Screen):
         calculate_win_rates - To calculate and update your champion win rates
         :return:
         """
+
+        # Clears previous data
+        self.win_rates = {}
+
         # Creates champion name to id conversion
         with open('data_dragon_10.14.1/10.14.1/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
             champion_dict = json.load(champion_data)
@@ -1025,65 +1069,84 @@ class SingleChampionGui(Screen):
         # Convert the champion name to champion id
         champion_id = champion_dict['data'][summoner_1.current_champion]['key']
 
-        # Epoch millisecond time when ranked season 2021 began
-        begin_time = 1610118000000
-        url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?champion=" + str(champion_id) + "&queue=420&beginTime=" + str(begin_time) + "&api_key=" + str(DevelopmentAPIKey)
+
+        # If there is saved data
+        if os.path.isfile('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv'):
+            df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv')
+            for index, line in df.iterrows():
+
+                if not pandas.isna(line['champion_name']):
+                    champion_name = 'None'
+                else:
+                    champion_name = line['champion_name']
+                wins = line['wins']
+                losses = line['losses']
+                self.win_rates[champion_name] = [wins, losses]
+
+        url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?champion=" + str(champion_id) + "&queue=420&beginTime=" + str(self.last_update) + "&api_key=" + str(DevelopmentAPIKey)
 
         account_details = requests.get(url)
+
+        # Checking for 404 error: no new data
+        status = account_details.status_code
         account_details = account_details.json()
-        total_games = account_details['totalGames']
-        begin_index = 0
 
-        # Loops through the sets of 100 games
-        while begin_index < total_games:
-            indexed_url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matchlists/by-account/' + summoner_1.account_id + '?champion=' + str(champion_id) + '&queue=420&beginTime=' + str(begin_time) + '&beginIndex=' + str(begin_index) + '&api_key=' + str(DevelopmentAPIKey)
-            match_history = requests.get(indexed_url)
-            match_history = match_history.json()
-            matches = match_history['matches']
+        if status != 404:
+            total_games = account_details['totalGames']
+            begin_index = 0
 
-            # Loops through all matches in match_data
-            for match in matches:
+            # Loops through the sets of 100 games
+            while begin_index < total_games:
+                indexed_url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matchlists/by-account/' + summoner_1.account_id + '?champion=' + str(champion_id) + '&queue=420&beginTime=' + str(self.last_update) + '&beginIndex=' + str(begin_index) + '&api_key=' + str(DevelopmentAPIKey)
+                match_history = requests.get(indexed_url)
+                match_history = match_history.json()
+                matches = match_history['matches']
 
-                # Todo Using sleep to delay the calls to riot api
-                sleep(2)
-                print('sleeping 2 seconds')
+                # Loops through all matches in match_data
+                for match in matches:
 
-                current_champ = match['champion']
-                current_champion_name = champion_id_to_name.get(str(current_champ))
+                    # Todo Using sleep to delay the calls to riot api
+                    sleep(2)
+                    print('sleeping 2 seconds')
 
-                game_id = str(match['gameId'])
+                    current_champ = match['champion']
+                    current_champion_name = champion_id_to_name.get(str(current_champ))
 
-                match_lookup = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matches/' + game_id + '?api_key=' + str(
-                    DevelopmentAPIKey)
-                match_lookup = requests.get(match_lookup)
-                match_lookup = match_lookup.json()
+                    game_id = str(match['gameId'])
 
-                # Win is used to find the opposing team (the inverse of whatever win is)
-                win = None
+                    match_lookup = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matches/' + game_id + '?api_key=' + str(
+                        DevelopmentAPIKey)
+                    match_lookup = requests.get(match_lookup)
+                    match_lookup = match_lookup.json()
 
-                # Loops through each player in the match
-                for summoner in match_lookup['participants']:
-                    if summoner['championId'] == current_champ:
-                        win = summoner['stats']['win']
+                    # Win is used to find the opposing team (the inverse of whatever win is)
+                    win = None
 
-                # Loops through each player in the match a second time now know which team has the enemies
-                for summoner in match_lookup['participants']:
-                    if summoner['stats']['win'] is not win:
-                        enemy_champ = champion_id_to_name.get(str(summoner['championId']))
+                    # Loops through each player in the match
+                    for summoner in match_lookup['participants']:
+                        if summoner['championId'] == current_champ:
+                            win = summoner['stats']['win']
 
-                        if enemy_champ in self.win_rates:
-                            if win is True:
-                                self.win_rates[enemy_champ][0] = self.win_rates[enemy_champ][0] + 1
+                    # Loops through each player in the match a second time now know which team has the enemies
+                    for summoner in match_lookup['participants']:
+                        if summoner['stats']['win'] is not win:
+                            enemy_champ = champion_id_to_name.get(str(summoner['championId']))
+
+                            if enemy_champ in self.win_rates:
+                                if win is True:
+                                    self.win_rates[enemy_champ][0] = self.win_rates[enemy_champ][0] + 1
+                                else:
+                                    self.win_rates[enemy_champ][1] = self.win_rates[enemy_champ][1] + 1
                             else:
-                                self.win_rates[enemy_champ][1] = self.win_rates[enemy_champ][1] + 1
-                        else:
-                            if win is True:
-                                self.win_rates[enemy_champ] = [1, 0]
-                            else:
-                                self.win_rates[enemy_champ] = [0, 1]
+                                if win is True:
+                                    self.win_rates[enemy_champ] = [1, 0]
+                                else:
+                                    self.win_rates[enemy_champ] = [0, 1]
 
-            # Maximum number of games that can be loaded at once is 100
-            begin_index += 100
+                # Maximum number of games that can be loaded at once is 100
+                begin_index += 100
+        else:
+            self.no_new_data = True
 
     def save_win_rates(self):
         """
@@ -1097,7 +1160,7 @@ class SingleChampionGui(Screen):
         column_2 = []       # Win Rate
         column_3 = []       # Wins
         column_4 = []       # Losses
-        column_5 = datetime.datetime.now().timestamp() * 1000.0
+        column_5 = round(datetime.datetime.now().timestamp() * 1000.0)
 
         for entry in self.win_rates:
             wins = self.win_rates[entry][0]
@@ -1127,7 +1190,6 @@ class SingleChampionGui(Screen):
         """
 
         df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv')
-        last_updated = None
         for index, line in df.iterrows():
 
             # Champion Name + Icon
@@ -1202,6 +1264,25 @@ class SingleChampionGui(Screen):
         sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'date'], index=False)
         self.populate_single_champion_win_rates()
 
+    def update_single_champion(self):
+        """
+        update_all_champions: Updates the all_champions csv file based on the last date saved
+        :return:
+        """
+        df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv')
+        date = None
+        for index, line in df.iterrows():
+            date = line['date']
+        if date is not None:
+            self.last_update = date
+        else:
+            print("Error: Date is none")
+            exit(1)
+
+        self.calculate_win_rates()
+        if self.no_new_data is False:
+            self.save_win_rates()
+            self.populate_single_champion_win_rates()
 
 # ==========================================================================================
 #       Gui Manager:
