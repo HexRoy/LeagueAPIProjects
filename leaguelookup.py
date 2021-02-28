@@ -27,7 +27,7 @@ import datetime
 
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-e3cb823a-bf40-48bd-98e6-3fbdeb4bcaa2"
+DevelopmentAPIKey = "RGAPI-02ea8ad7-2136-421a-b262-1320f662c10c"
 cass.set_riot_api_key(DevelopmentAPIKey)
 
 # Todo
@@ -740,6 +740,7 @@ class AllChampionsGui(Screen):
         self.account_url = None
         self.match_url = None
         self.win_rates = {}
+        self.all_kda = {}
         self.champ_sort = False
         self.win_rate_sort = False
         self.no_new_data = False
@@ -778,6 +779,7 @@ class AllChampionsGui(Screen):
 
         # Clears any previous temp data
         self.win_rates = {}
+        self.all_kda = {}
 
         # If there is saved data
         if os.path.isfile('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv'):
@@ -839,6 +841,8 @@ class AllChampionsGui(Screen):
                     # Loops through each player in the match
                     for summoner in match_lookup['participants']:
                         if summoner['championId'] == current_champ:
+
+                            # Calculates the winrates for each champion
                             win = summoner['stats']['win']
 
                             if current_champion_name in self.win_rates:
@@ -852,7 +856,20 @@ class AllChampionsGui(Screen):
                                 else:
                                     self.win_rates[current_champion_name] = [0, 1]
 
-                    print(current_champ, begin_index)
+                            # Calculates the kda for each champion
+                            kills = summoner['stats']['kills']
+                            deaths = summoner['stats']['deaths']
+                            assists = summoner['stats']['assists']
+                            kda = (kills + assists) / deaths
+
+                            if current_champion_name in self.all_kda:
+                                self.all_kda[current_champion_name][0] = self.all_kda[current_champion_name][0] + kda
+                                self.all_kda[current_champion_name][1] = self.all_kda[current_champion_name][1] + 1
+                            else:
+                                self.all_kda[current_champion_name] = [kda, 1]
+
+                    print('loaded 1 game')
+
                 # Maximum number of games that can be loaded at once is 100
                 begin_index += 100
 
@@ -881,7 +898,9 @@ class AllChampionsGui(Screen):
             win_rate = line['win_rates']
             wins = line['wins']
             losses = line['losses']
+            kda = line['kda']
 
+            calculated_kda_text = 'KDA: ' + str(kda)
             calculated_win_rate_text = str(win_rate) + ' % : (' + str(wins) + ' / ' + str(losses) + ')'
 
             if win_rate <= 25:
@@ -903,11 +922,13 @@ class AllChampionsGui(Screen):
             view_button = Button(text="View", size_hint=(None, None), height=self.height / 8, width=self.width / 9)
             view_button.id = str(champion_name)
             view_button.bind(on_press=partial(self.single_champion))
+            kda_label = Label(text=calculated_kda_text, size_hint=(None, None), height=self.height / 8)
 
             self.all_champions_grid_layout.add_widget(view_button)
             self.all_champions_grid_layout.add_widget(champion_name_label)
             self.all_champions_grid_layout.add_widget(champion_image)
             self.all_champions_grid_layout.add_widget(win_rate_label)
+            self.all_champions_grid_layout.add_widget(kda_label)
 
     def save_win_rates(self):
         """
@@ -921,20 +942,27 @@ class AllChampionsGui(Screen):
         column_2 = []       # Win Rate
         column_3 = []       # Wins
         column_4 = []       # Losses
-        column_5 = round(datetime.datetime.now().timestamp() * 1000.0)
+        column_5 = []       # KDA
+        column_6 = round(datetime.datetime.now().timestamp() * 1000.0)
 
         for entry in self.win_rates:
-            wins = self.win_rates[entry][0]
-            losses = self.win_rates[entry][1]
-            win_rate = round(((int(wins) / (int(losses) + int(wins))) * 100), 2)
+            for entry2 in self.all_kda:
+                if entry == entry2:
 
-            column_1.append(entry)
-            column_2.append(win_rate)
-            column_3.append(wins)
-            column_4.append(losses)
+                    wins = self.win_rates[entry][0]
+                    losses = self.win_rates[entry][1]
+                    win_rate = round(((int(wins) / (int(losses) + int(wins))) * 100), 2)
+                    summed_kda = self.all_kda[entry2][0]
+                    number_games = self.all_kda[entry2][1]
+                    kda = round((summed_kda / number_games), 2)
 
-            data = {'champion_name': column_1, 'win_rate': column_2, 'wins': column_3, 'losses': column_4}
-        data['date'] = column_5
+                    column_1.append(entry)
+                    column_2.append(win_rate)
+                    column_3.append(wins)
+                    column_4.append(losses)
+                    column_5.append(kda)
+            data = {'champion_name': column_1, 'win_rate': column_2, 'wins': column_3, 'losses': column_4, 'kda': column_5}
+        data['date'] = column_6
 
 
 
@@ -944,7 +972,7 @@ class AllChampionsGui(Screen):
             os.remove(summoners_path + '/all_champions_win_rates.csv')
 
         df = pandas.DataFrame(data=data)
-        df.to_csv(summoners_path + '/all_champions_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'date'], index=False)
+        df.to_csv(summoners_path + '/all_champions_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'kda', 'date'], index=False)
 
     def sort_by_champion(self):
         """
@@ -961,7 +989,7 @@ class AllChampionsGui(Screen):
             self.champ_sort = False
 
         os.remove('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
-        sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'date'], index=False)
+        sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'kda', 'date'], index=False)
         self.populate_all_champion_win_rates()
 
     def sort_by_win_rate(self):
@@ -978,7 +1006,7 @@ class AllChampionsGui(Screen):
             sorted_df = df.sort_values(by=["win_rates"], ascending=True)
             self.win_rate_sort = False
         os.remove('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
-        sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'date'], index=False)
+        sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'kda', 'date'], index=False)
         self.populate_all_champion_win_rates()
 
     def single_champion(self, button):
@@ -1010,13 +1038,15 @@ class AllChampionsGui(Screen):
             self.save_win_rates()
             self.populate_all_champion_win_rates()
 
+
 # ==========================================================================================
 #       Single Champion Gui: All stats about a single champion the summoner plays
 # ==========================================================================================
 class SingleChampionGui(Screen):
     def __init__(self, **kwargs):
         super(Screen, self).__init__(**kwargs)
-        self.win_rates = None
+        self.win_rates = {}
+        self.kda = {}
         self.champ_sort = False
         self.win_rate_sort = False
 
@@ -1057,6 +1087,7 @@ class SingleChampionGui(Screen):
 
         # Clears previous data
         self.win_rates = {}
+        self.kda = {}
 
         # Creates champion name to id conversion
         with open('data_dragon_10.14.1/10.14.1/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
@@ -1121,17 +1152,25 @@ class SingleChampionGui(Screen):
 
                     # Win is used to find the opposing team (the inverse of whatever win is)
                     win = None
+                    kda = None
 
                     # Loops through each player in the match
                     for summoner in match_lookup['participants']:
                         if summoner['championId'] == current_champ:
                             win = summoner['stats']['win']
 
+                            # Calculates kda vs enemy champions
+                            kills = summoner['stats']['kills']
+                            deaths = summoner['stats']['deaths']
+                            assists = summoner['stats']['assists']
+                            kda = (kills + assists) / deaths
+
                     # Loops through each player in the match a second time now know which team has the enemies
                     for summoner in match_lookup['participants']:
                         if summoner['stats']['win'] is not win:
-                            enemy_champ = champion_id_to_name.get(str(summoner['championId']))
 
+                            # Calculates win percentages vs enemy champions
+                            enemy_champ = champion_id_to_name.get(str(summoner['championId']))
                             if enemy_champ in self.win_rates:
                                 if win is True:
                                     self.win_rates[enemy_champ][0] = self.win_rates[enemy_champ][0] + 1
@@ -1143,10 +1182,17 @@ class SingleChampionGui(Screen):
                                 else:
                                     self.win_rates[enemy_champ] = [0, 1]
 
+                            if enemy_champ in self.kda:
+                                self.kda[enemy_champ][0] = self.kda[enemy_champ][0] + kda
+                                self.kda[enemy_champ][1] = self.kda[enemy_champ][1] + 1
+                            else:
+                                self.kda[enemy_champ] = [kda, 1]
+
                 # Maximum number of games that can be loaded at once is 100
                 begin_index += 100
         else:
             self.no_new_data = True
+
 
     def save_win_rates(self):
         """
@@ -1160,20 +1206,28 @@ class SingleChampionGui(Screen):
         column_2 = []       # Win Rate
         column_3 = []       # Wins
         column_4 = []       # Losses
-        column_5 = round(datetime.datetime.now().timestamp() * 1000.0)
+        column_5 = []       # KDA
+        column_6 = round(datetime.datetime.now().timestamp() * 1000.0)
 
         for entry in self.win_rates:
-            wins = self.win_rates[entry][0]
-            losses = self.win_rates[entry][1]
-            win_rate = round(((int(wins) / (int(losses) + int(wins))) * 100), 2)
+            for entry2 in self.kda:
+                if entry2 == entry:
+                    wins = self.win_rates[entry][0]
+                    losses = self.win_rates[entry][1]
+                    win_rate = round(((int(wins) / (int(losses) + int(wins))) * 100), 2)
 
-            column_1.append(entry)
-            column_2.append(win_rate)
-            column_3.append(wins)
-            column_4.append(losses)
+                    summed_kda = self.kda[entry2][0]
+                    number_games = self.kda[entry2][1]
+                    kda = round((summed_kda / number_games), 2)
 
-            data = {'champion_name': column_1, 'win_rate': column_2, 'wins': column_3, 'losses': column_4}
-        data['date'] = column_5
+                    column_1.append(entry)
+                    column_2.append(win_rate)
+                    column_3.append(wins)
+                    column_4.append(losses)
+                    column_5.append(kda)
+
+            data = {'champion_name': column_1, 'win_rate': column_2, 'wins': column_3, 'losses': column_4, 'kda': column_5}
+        data['date'] = column_6
 
         # If data is found for the summoner
         if os.path.isfile(summoners_path + '/' + summoner_1.current_champion + '_win_rates.csv'):
@@ -1181,7 +1235,7 @@ class SingleChampionGui(Screen):
             os.remove(summoners_path + '/' + summoner_1.current_champion + '_win_rates.csv')
 
         df = pandas.DataFrame(data=data)
-        df.to_csv(summoners_path + '/' + summoner_1.current_champion + '_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'date'], index=False)
+        df.to_csv(summoners_path + '/' + summoner_1.current_champion + '_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'kda', 'date'], index=False)
 
     def populate_single_champion_win_rates(self):
         """
@@ -1205,8 +1259,10 @@ class SingleChampionGui(Screen):
             win_rate = line['win_rates']
             wins = line['wins']
             losses = line['losses']
+            kda = line['kda']
 
             calculated_win_rate_text = str(win_rate) + ' % : (' + str(wins) + ' / ' + str(losses) + ')'
+            kda_text = 'KDA: ' + str(kda)
 
             if win_rate <= 25:
                 color = [1, 0, 0, 1]
@@ -1224,10 +1280,12 @@ class SingleChampionGui(Screen):
                 color = [0, 1, 1, 1]
 
             win_rate_label = Label(text=calculated_win_rate_text, size_hint=(None, None), height=self.height / 8, color=color)
+            kda_label = Label(text=kda_text, size_hint=(None, None), height=self.height / 8)
 
             self.single_champion_grid_layout.add_widget(champion_name_label)
             self.single_champion_grid_layout.add_widget(champion_image)
             self.single_champion_grid_layout.add_widget(win_rate_label)
+            self.single_champion_grid_layout.add_widget(kda_label)
 
     def sort_by_champion(self):
         """
@@ -1244,7 +1302,7 @@ class SingleChampionGui(Screen):
             self.champ_sort = False
 
         os.remove('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv')
-        sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'date'], index=False)
+        sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'kda', 'date'], index=False)
         self.populate_single_champion_win_rates()
 
     def sort_by_win_rate(self):
@@ -1261,7 +1319,7 @@ class SingleChampionGui(Screen):
             sorted_df = df.sort_values(by=["win_rates"], ascending=True)
             self.win_rate_sort = False
         os.remove('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv')
-        sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'date'], index=False)
+        sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses','kda', 'date'], index=False)
         self.populate_single_champion_win_rates()
 
     def update_single_champion(self):
