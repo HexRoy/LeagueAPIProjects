@@ -29,6 +29,8 @@ import datetime
 # Key needed to lookup summoner information with riot's api
 DevelopmentAPIKey = "RGAPI-02ea8ad7-2136-421a-b262-1320f662c10c"
 cass.set_riot_api_key(DevelopmentAPIKey)
+data_dragon_version = '11.4.1'
+
 
 # Todo
 #   Add a settings tab
@@ -433,7 +435,7 @@ class ProfileGui(Screen):
         match_history = match_history.json()
 
         # Creates a champion id to name conversion dictionary
-        with open('data_dragon_10.14.1/10.14.1/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
+        with open('data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
             champion_dict = json.load(champion_data)
         champion_id_to_name = {}
         for key in champion_dict['data']:
@@ -451,10 +453,10 @@ class ProfileGui(Screen):
             champion_name = champion_id_to_name.get(str(match['champion']))
 
             if champion_name is not None:
-                champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/' + champion_name + '.png', size_hint=(None, None), height=self.height/8)
+                champion_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/champion/' + champion_name + '.png', size_hint=(None, None), height=self.height/8)
                 self.profile_match_history.add_widget(champion_image)
             else:
-                self.profile_match_history.add_widget(Image(source='data_dragon_10.14.1/10.14.1/img/champion/None.png', size_hint=(None, None), height=self.height/8))
+                self.profile_match_history.add_widget(Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/champion/None.png', size_hint=(None, None), height=self.height/8))
 
             # Obtains the matches data
             url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matches/' + str(match['gameId']) +'?api_key=' + DevelopmentAPIKey
@@ -502,12 +504,12 @@ class ProfileGui(Screen):
                         if item == 0:
                             pass
                         else:
-                            item_image = Image(source='data_dragon_10.14.1/10.14.1/img/item/' + str(item) + ".png",allow_stretch=True, keep_ratio=False, size_hint=(None, None), width=self.width/14, height=self.height/17)
+                            item_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/item/' + str(item) + ".png",allow_stretch=True, keep_ratio=False, size_hint=(None, None), width=self.width/14, height=self.height/17)
                             item_grid_layout.add_widget(item_image)
                     self.profile_match_history.add_widget(item_grid_layout)
 
                     # Opens the summoner spells json file
-                    with open('data_dragon_10.14.1/10.14.1/data/en_US/summoner.json', 'r', encoding="utf-8") as summoner_spells:
+                    with open('data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/data/en_US/summoner.json', 'r', encoding="utf-8") as summoner_spells:
                         spell_dict = json.load(summoner_spells)
 
                     # Finds spell 1
@@ -529,9 +531,9 @@ class ProfileGui(Screen):
 
                     # Adds spells and ward icon to match history
                     spell_grid_layout = GridLayout(cols=3, spacing=(.1, 0))
-                    ward_image = Image(source='data_dragon_10.14.1/10.14.1/img/item/' + str(players['stats']['item6']) + ".png",  keep_ratio=False, size_hint=(None, None), width=self.width / 14, height=self.height / 17)
-                    spell1_image = Image(source='data_dragon_10.14.1/10.14.1/img/spell/' + spell_1_name + ".png", allow_stretch=True, keep_ratio=False, size_hint=(None, None), width=self.width / 14, height=self.height / 17)
-                    spell2_image = Image(source='data_dragon_10.14.1/10.14.1/img/spell/' + spell_2_name + ".png", allow_stretch=True, keep_ratio=False, size_hint=(None, None), width=self.width / 14, height=self.height / 17)
+                    ward_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/item/' + str(players['stats']['item6']) + ".png",  keep_ratio=False, size_hint=(None, None), width=self.width / 14, height=self.height / 17)
+                    spell1_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/spell/' + spell_1_name + ".png", allow_stretch=True, keep_ratio=False, size_hint=(None, None), width=self.width / 14, height=self.height / 17)
+                    spell2_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/spell/' + spell_2_name + ".png", allow_stretch=True, keep_ratio=False, size_hint=(None, None), width=self.width / 14, height=self.height / 17)
                     spell_grid_layout.add_widget(ward_image)
                     spell_grid_layout.add_widget(spell1_image)
                     spell_grid_layout.add_widget(spell2_image)
@@ -640,7 +642,7 @@ class MatchGui(Screen):
             champion_id = summoner['championId']
 
             # Creates a champion id to name conversion dictionary
-            with open('data_dragon_10.14.1/10.14.1/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
+            with open('data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
                 champion_dict = json.load(champion_data)
 
             champion_id_to_name = {}
@@ -650,9 +652,9 @@ class MatchGui(Screen):
 
             champion_name = champion_id_to_name.get(str(champion_id))
             if champion_name is not None:
-                champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/' + champion_name + '.png', size_hint=(None, None), height=self.height / 8, width=self.width/10)
+                champion_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/champion/' + champion_name + '.png', size_hint=(None, None), height=self.height / 8, width=self.width/10)
             else:
-                champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/None.png', size_hint=(None, None), height=self.height / 8, width=self.width / 10)
+                champion_image = Image(source='data_dragon_1' + data_dragon_version + '/' + data_dragon_version + '/img/champion/None.png', size_hint=(None, None), height=self.height / 8, width=self.width / 10)
 
             #TODO REmove
             pprint.pprint(summoner)
@@ -707,7 +709,7 @@ class MatchGui(Screen):
             if item == 0:
                 pass
             else:
-                item_image = Image(source='data_dragon_10.14.1/10.14.1/img/item/' + str(item) + ".png",
+                item_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/item/' + str(item) + ".png",
                                    allow_stretch=True, keep_ratio=False, size_hint=(None, None),
                                    width=self.width / 14, height=self.height / 17)
                 item_grid_layout.add_widget(item_image)
@@ -807,7 +809,7 @@ class AllChampionsGui(Screen):
             begin_index = 0
 
             # Creates a champion id to name conversion dictionary
-            with open('data_dragon_10.14.1/10.14.1/data/en_US/champion.json', 'r',
+            with open('data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/data/en_US/champion.json', 'r',
                       encoding="utf-8") as champion_data:
                 champion_dict = json.load(champion_data)
             champion_id_to_name = {}
@@ -888,10 +890,10 @@ class AllChampionsGui(Screen):
             # Champion Name + Icon
             champion_name = line['champion_name']
             if not pandas.isna(line['champion_name']):
-                champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/' + champion_name + '.png',
+                champion_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/champion/' + champion_name + '.png',
                                        size_hint=(None, None), height=self.height / 8)
             else:
-                champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/None.png', size_hint=(None, None), height=self.height / 8)
+                champion_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/champion/None.png', size_hint=(None, None), height=self.height / 8)
             champion_name_label = Label(text=str(champion_name), size_hint=(None, None), height=self.height/8)
 
             # Converts the string representation of the win rate list list, to a list
@@ -1090,7 +1092,7 @@ class SingleChampionGui(Screen):
         self.kda = {}
 
         # Creates champion name to id conversion
-        with open('data_dragon_10.14.1/10.14.1/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
+        with open('data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
             champion_dict = json.load(champion_data)
         champion_id_to_name = {}
         for key in champion_dict['data']:
@@ -1249,10 +1251,10 @@ class SingleChampionGui(Screen):
             # Champion Name + Icon
             champion_name = line['champion_name']
             if not pandas.isna(line['champion_name']):
-                champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/' + champion_name + '.png',
+                champion_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/champion/' + champion_name + '.png',
                                        size_hint=(None, None), height=self.height / 8)
             else:
-                champion_image = Image(source='data_dragon_10.14.1/10.14.1/img/champion/None.png', size_hint=(None, None), height=self.height / 8)
+                champion_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/champion/None.png', size_hint=(None, None), height=self.height / 8)
             champion_name_label = Label(text=str(champion_name), size_hint=(None, None), height=self.height/8)
 
             # Converts the string representation of the win rate list list, to a list
