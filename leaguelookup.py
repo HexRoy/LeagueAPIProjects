@@ -27,7 +27,7 @@ import datetime
 
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-02ea8ad7-2136-421a-b262-1320f662c10c"
+DevelopmentAPIKey = "RGAPI-fd238cb7-03d8-4d59-9e77-1532f6c35bf3"
 cass.set_riot_api_key(DevelopmentAPIKey)
 data_dragon_version = '11.4.1'
 
@@ -56,12 +56,12 @@ data_dragon_version = '11.4.1'
 #       Add expand view to add more games, and throttling when loading to avoid timeout
 #   Champions
 #       Add filtering by season
-#       Create no new games popup
 #   Single Champion
 #       win rates on one champion vs every champion you have played against
-#       Create no new games popup
 #   Live Game
 #   CRASH : something to do with time duration of a match (possibly aram games have a different variable)
+#       It is timing because of rate limits on league api
+#   Bug: When updating new games: all previous data got erased? need to do more testing
 #   Fix: transition directions for each screen
 #   Challenger rank not needed: Challenger I
 
@@ -189,7 +189,6 @@ class HomeGui(Screen):
                 "RU": "RU",
                 }
             summoner_1.cass_region = region_conversion[region]
-
 
             # All data for summoner lookup
             summoner_1.region = region
@@ -366,6 +365,14 @@ class InvalidSearchPopup(FloatLayout):
         :return:
         """
         self.popup_label.text = "API Key Outdated"
+        self.popup.open()
+
+    def open_popup_5(self):
+        """
+        open_popup_5: opens the new no games played popup
+        :return:
+        """
+        self.popup_label.text = "Up to date"
         self.popup.open()
 
     def close_popup(self):
@@ -1039,6 +1046,10 @@ class AllChampionsGui(Screen):
         if self.no_new_data is False:
             self.save_win_rates()
             self.populate_all_champion_win_rates()
+        else:
+            popup = InvalidSearchPopup()
+            popup.open_popup_5()
+            print("No new data")
 
 
 # ==========================================================================================
@@ -1343,6 +1354,10 @@ class SingleChampionGui(Screen):
         if self.no_new_data is False:
             self.save_win_rates()
             self.populate_single_champion_win_rates()
+        else:
+            popup = InvalidSearchPopup()
+            popup.open_popup_5()
+            print("No new data")
 
 # ==========================================================================================
 #       Gui Manager:

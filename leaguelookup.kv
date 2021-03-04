@@ -96,27 +96,6 @@ GuiManager:
 
 
 # ==========================================================================================
-#       Invalid Search Popup: A Window popup for invalid searches
-# ==========================================================================================
-<InvalidSearchPopup>
-    popup_label: popupLabel
-    FloatLayout:
-        size_hint:(0.3, 0.3)
-        pos_hint:{"center_x":0.5, "center_y":0.5}
-        Label:
-            id: popupLabel
-            text: ""        # Text is added based on what error is occurring: Check class for details
-            pos_hint: {"x":0.2, "top":1}
-            size_hint: 0.6, 0.2
-        Button:
-            pos_hint: {"x":-0.25, "y":-0.4}
-            size_hint: 1.5, 0.8
-            text: "Go Back"
-            on_release:
-                root.close_popup()
-
-
-# ==========================================================================================
 #       Profile Gui: Contains summoner information, and match history
 # ==========================================================================================
 <ProfileGui>:
@@ -482,3 +461,45 @@ GuiManager:
             height: self.minimum_height
             size_hint: 1, None
             spacing: self.width/16 , 20
+
+
+# ==========================================================================================
+#       Invalid Search Popup: A Window popup for invalid searches
+# ==========================================================================================
+<InvalidSearchPopup>
+    popup_label: popupLabel
+    FloatLayout:
+        size_hint:(0.3, 0.3)
+        pos_hint:{"center_x":0.5, "center_y":0.5}
+        Label:
+            id: popupLabel
+            text: ""        # Text is added based on what error is occurring: Check class for details
+            pos_hint: {"x":0.2, "top":1}
+            size_hint: 0.6, 0.2
+        Button:
+            pos_hint: {"x":-0.25, "y":-0.4}
+            size_hint: 1.5, 0.8
+            text: "Go Back"
+            on_release:
+                root.close_popup()
+
+
+# ==========================================================================================
+#       Invalid Search Popup: A Window popup for invalid searches
+# ==========================================================================================
+<InvalidSearchPopup>
+    popup_label: popupLabel
+    FloatLayout:
+        size_hint:(0.3, 0.3)
+        pos_hint:{"center_x":0.5, "center_y":0.5}
+        Label:
+            id: popupLabel
+            text: ""        # Text is added based on what error is occurring: Check class for details
+            pos_hint: {"x":0.2, "top":1}
+            size_hint: 0.6, 0.2
+        Button:
+            pos_hint: {"x":-0.25, "y":-0.4}
+            size_hint: 1.5, 0.8
+            text: "Go Back"
+            on_release:
+                root.close_popup()
