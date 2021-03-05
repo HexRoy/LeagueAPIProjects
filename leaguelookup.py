@@ -888,8 +888,8 @@ class AllChampionsGui(Screen):
                 # Maximum number of games that can be loaded at once is 100
                 begin_index += 100
 
-            else:
-                self.no_new_data = True
+        else:
+            self.no_new_data = True
 
     def populate_all_champion_win_rates(self):
         """
@@ -1022,10 +1022,10 @@ class AllChampionsGui(Screen):
         self.all_champions_grid_layout.clear_widgets()
         df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
         if self.win_rate_sort is False:
-            sorted_df = df.sort_values(by=["win_rates"], ascending=False)
+            sorted_df = df.sort_values(by=["win_rates", "wins"], ascending=[False, False])
             self.win_rate_sort = True
         else:
-            sorted_df = df.sort_values(by=["win_rates"], ascending=True)
+            sorted_df = df.sort_values(by=["win_rates", "wins"], ascending=[True, True])
             self.win_rate_sort = False
         os.remove('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
         sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'kills_assists', 'deaths', 'date'], index=False)
@@ -1213,6 +1213,7 @@ class SingleChampionGui(Screen):
 
                 # Maximum number of games that can be loaded at once is 100
                 begin_index += 100
+
         else:
             self.no_new_data = True
 
@@ -1343,14 +1344,30 @@ class SingleChampionGui(Screen):
         self.single_champion_grid_layout.clear_widgets()
         df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv')
         if self.win_rate_sort is False:
-            sorted_df = df.sort_values(by=["win_rates"], ascending=False)
+            sorted_df = df.sort_values(by=["win_rates", "wins"], ascending=[False, False])
             self.win_rate_sort = True
         else:
-            sorted_df = df.sort_values(by=["win_rates"], ascending=True)
+            sorted_df = df.sort_values(by=["win_rates", "losses"], ascending=[True, True])
             self.win_rate_sort = False
         os.remove('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv')
         sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'kills_assists', 'deaths', 'date'], index=False)
         self.populate_single_champion_win_rates()
+
+
+
+
+
+
+
+
+# TODO: updating erased all data
+
+
+
+
+
+
+
 
     def update_single_champion(self):
         """
