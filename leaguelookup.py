@@ -58,16 +58,11 @@ data_dragon_version = '11.4.1'
 #       Add view summoner button next to other summoners in the game
 #   Champions
 #       Add filtering by season
-#       Calculate KDA after saving: Save  Kills+assists | Deaths
-#           When populating check for division by zero
 #   Single Champion
 #       win rates on one champion vs every champion you have played against
-#       Calculate KDA after saving: Save  Kills+assists | Deaths
-#           When populating check for division by zero
 #   Live Game
 #   CRASH : something to do with time duration of a match (possibly aram games have a different variable)
 #       It is timing because of rate limits on league api
-#   Bug: When updating new games: all previous data got erased? need to do more testing
 #   Fix: transition directions for each screen
 #   Challenger rank not needed: Challenger I
 
@@ -1352,22 +1347,6 @@ class SingleChampionGui(Screen):
         os.remove('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv')
         sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'kills_assists', 'deaths', 'date'], index=False)
         self.populate_single_champion_win_rates()
-
-
-
-
-
-
-
-
-# TODO: updating erased all data
-
-
-
-
-
-
-
 
     def update_single_champion(self):
         """
