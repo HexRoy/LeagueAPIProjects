@@ -27,7 +27,7 @@ import datetime
 
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-baca05a2-f4c3-4d2c-8d04-e43aca394822"
+DevelopmentAPIKey = "RGAPI-98c72cd7-edac-4536-91ec-5ba1805bdb6a"
 cass.set_riot_api_key(DevelopmentAPIKey)
 data_dragon_version = '11.4.1'
 
@@ -848,6 +848,12 @@ class AllChampionsGui(Screen):
                     match_lookup = requests.get(match_lookup)
                     match_lookup = match_lookup.json()
 
+                    #Todo:
+                    # Bug: crashing -
+                    #   for summoner in match_lookup['participants']:
+                    #   KeyError: 'participants'
+                    print(match_lookup)
+
                     # Loops through each player in the match
                     for summoner in match_lookup['participants']:
                         if summoner['championId'] == current_champ:
@@ -1020,7 +1026,7 @@ class AllChampionsGui(Screen):
             sorted_df = df.sort_values(by=["win_rates", "wins"], ascending=[False, False])
             self.win_rate_sort = True
         else:
-            sorted_df = df.sort_values(by=["win_rates", "wins"], ascending=[True, True])
+            sorted_df = df.sort_values(by=["win_rates", "losses"], ascending=[True, False])
             self.win_rate_sort = False
         os.remove('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
         sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'kills_assists', 'deaths', 'date'], index=False)
@@ -1171,6 +1177,16 @@ class SingleChampionGui(Screen):
 
                     # Win is used to find the opposing team (the inverse of whatever win is)
                     win = None
+
+
+                    # Todo:
+                    #  Bug: crashing -
+                    #   for summoner in match_lookup['participants']:
+                    #   KeyError: 'participants'
+                    #       .
+                    #   Found: {'status': {'message': 'Gateway timeout', 'status_code': 504}}
+                    print(match_lookup)
+
 
                     # Loops through each player in the match
                     for summoner in match_lookup['participants']:
@@ -1342,7 +1358,7 @@ class SingleChampionGui(Screen):
             sorted_df = df.sort_values(by=["win_rates", "wins"], ascending=[False, False])
             self.win_rate_sort = True
         else:
-            sorted_df = df.sort_values(by=["win_rates", "losses"], ascending=[True, True])
+            sorted_df = df.sort_values(by=["win_rates", "losses"], ascending=[True, False])
             self.win_rate_sort = False
         os.remove('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv')
         sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv', header=['champion_name', 'win_rates', 'wins', 'losses', 'kills_assists', 'deaths', 'date'], index=False)
