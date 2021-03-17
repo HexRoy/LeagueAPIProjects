@@ -1024,10 +1024,10 @@ class AllChampionsGui(Screen):
         self.all_champions_grid_layout.clear_widgets()
         df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
         if self.win_rate_sort is False:
-            sorted_df = df.sort_values(by=["win_rates", "wins"], ascending=[False, False])
+            sorted_df = df.sort_values(by=["wins"], ascending=[False])
             self.win_rate_sort = True
         else:
-            sorted_df = df.sort_values(by=["win_rates", "losses"], ascending=[True, False])
+            sorted_df = df.sort_values(by=["losses"], ascending=[False])
             self.win_rate_sort = False
         os.remove('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
         sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv', header=['champion_name', 'wins', 'losses', 'kills_assists', 'deaths', 'date'], index=False)
@@ -1359,10 +1359,10 @@ class SingleChampionGui(Screen):
         self.single_champion_grid_layout.clear_widgets()
         df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv')
         if self.win_rate_sort is False:
-            sorted_df = df.sort_values(by=["win_rates", "wins"], ascending=[False, False])
+            sorted_df = df.sort_values(by=["wins"], ascending=[False])
             self.win_rate_sort = True
         else:
-            sorted_df = df.sort_values(by=["win_rates", "losses"], ascending=[True, False])
+            sorted_df = df.sort_values(by=["losses"], ascending=[False])
             self.win_rate_sort = False
         os.remove('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv')
         sorted_df.to_csv('winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv', header=['champion_name', 'wins', 'losses', 'kills_assists', 'deaths', 'date'], index=False)
