@@ -1,5 +1,7 @@
-champion_name,win_rates,wins,losses,kills_assists,deaths,date
-Skarner,62.79,27,16,653,154,1615221692793
-Ivern,46.34,19,22,553,175,1615221692793
-Maokai,0.0,0,1,17,4,1615221692793
-Heimerdinger,0.0,0,1,5,7,1615221692793
+champion_name,wins,losses,kills_assists,deaths,date
+Skarner,29,23,731,193,1615998479633
+Hecarim,1,0,23,5,1615998479633
+Varus,0,1,4,7,1615998479633
+Ivern,19,22,553,175,1615998479633
+Maokai,0,1,17,4,1615998479633
+Heimerdinger,0,1,5,7,1615998479633
