@@ -804,8 +804,8 @@ class AllChampionsGui(Screen):
             if os.path.isfile('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv'):
                 df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
                 for index, line in df.iterrows():
-
-                    if not pandas.isna(line['champion_name']):
+                    if pandas.isna(line['champion_name']):
+                        print("pandas.isna(line['champion_name']", pandas.isna(line['champion_name']))
                         champion_name = 'None'
                     else:
                         champion_name = line['champion_name']
@@ -813,6 +813,7 @@ class AllChampionsGui(Screen):
                     losses = line['losses']
                     kills_assists = line['kills_assists']
                     deaths = line['deaths']
+
                     self.win_rates[champion_name] = [wins, losses]
                     self.all_kda[champion_name] = [kills_assists, deaths]
 
@@ -1057,9 +1058,10 @@ class AllChampionsGui(Screen):
             exit(1)
 
         self.calculate_win_rates()
-        print(self.no_new_data)
+
         if self.no_new_data is False:
             self.save_win_rates()
+            self.all_champions_grid_layout.clear_widgets()
             self.populate_all_champion_win_rates()
         else:
             popup = InvalidSearchPopup()
@@ -1143,7 +1145,7 @@ class SingleChampionGui(Screen):
                     'winrate_csv/' + summoner_1.name + '/' + summoner_1.current_champion + '_win_rates.csv')
                 for index, line in df.iterrows():
 
-                    if not pandas.isna(line['champion_name']):
+                    if pandas.isna(line['champion_name']):
                         champion_name = 'None'
                     else:
                         champion_name = line['champion_name']
@@ -1384,6 +1386,7 @@ class SingleChampionGui(Screen):
         self.calculate_win_rates()
         if self.no_new_data is False:
             self.save_win_rates()
+            self.single_champion_grid_layout.clear_widgets()
             self.populate_single_champion_win_rates()
         else:
             popup = InvalidSearchPopup()
