@@ -1,4 +1,4 @@
-# Testing out the Riot Game League of Legends API
+# A League of Legends Analytics Tool
 #       - Geoffroy Penny
 
 # Imports
@@ -27,7 +27,7 @@ import datetime
 
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-4b328284-729f-402a-a2c1-958de65c1aab"
+DevelopmentAPIKey = "RGAPI-06927eb0-289f-41fe-b00c-1bfce3f0ea52"
 cass.set_riot_api_key(DevelopmentAPIKey)
 data_dragon_version = '11.4.1'
 
@@ -319,69 +319,6 @@ class HomeGui(Screen):
 
             self.history_grid_layout.add_widget(summoner_button)
             self.history_grid_layout.add_widget(favorite_button)
-
-
-# ==========================================================================================
-#       Invalid Search Popup: Displays popups for bad searches
-#           Types:  1 = No region selected
-#                   2 = No summoner name input
-#                   3 = Bad search: the combination is not found
-#                   4 = API Key is outdated
-# ==========================================================================================
-class InvalidSearchPopup(FloatLayout):
-    # Variables pulled from from <HomeGui> leaguelookup.kv
-    popup_label = ObjectProperty(None)
-
-    def __init__(self, **kwargs):
-        super(FloatLayout, self).__init__(**kwargs)
-        self.popup = Popup(title="Error!", content=self, size_hint=(.3, .3), auto_dismiss=True)
-
-    def open_popup_1(self):
-        """
-        open_popup_1: opens the no region selected popup
-        :return:
-        """
-        self.popup_label.text = "Select a region"
-        self.popup.open()
-
-    def open_popup_2(self):
-        """
-        open_popup_2: opens the no summoner name popup
-        :return:
-        """
-        self.popup_label.text = "Enter a summoner name"
-        self.popup.open()
-
-    def open_popup_3(self):
-        """
-        open_popup_3: opens the summoner not found popup
-        :return:
-        """
-        self.popup_label.text = "Summoner not found"
-        self.popup.open()
-
-    def open_popup_4(self):
-        """
-        open_popup_4: opens the api key outdated popup
-        :return:
-        """
-        self.popup_label.text = "API Key Outdated"
-        self.popup.open()
-
-    def open_popup_5(self):
-        """
-        open_popup_5: opens the new no games played popup
-        :return:
-        """
-        self.popup_label.text = "Up to date"
-        self.popup.open()
-
-    def close_popup(self):
-        """
-        close_popup: closes any of the three popups
-        :return:
-        """
-        self.popup.dismiss()
 
 
 # ==========================================================================================
@@ -739,6 +676,24 @@ class MatchGui(Screen):
 class SettingsGui(Screen):
     def __init__(self, **kwargs):
         super(Screen, self).__init__(**kwargs)
+
+    @staticmethod
+    def reset_favorites():
+        """
+        reset_favorites: Deletes the favorites.csv aka 'resetting favorites'
+        :return: N/A
+        """
+        popup = ResetWarningPopup()
+        popup.open_popup_1()
+
+    @staticmethod
+    def reset_history():
+        """
+        reset_favorites: Deletes the favorites.csv aka 'resetting favorites'
+        :return: N/A
+        """
+        popup = ResetWarningPopup()
+        popup.open_popup_2()
 
 
 # ==========================================================================================
@@ -1392,6 +1347,129 @@ class SingleChampionGui(Screen):
             popup = InvalidSearchPopup()
             popup.open_popup_5()
             print("No new data")
+
+
+# ==========================================================================================
+#       Invalid Search Popup: Displays popups for bad searches
+#           Types:  1 = No region selected
+#                   2 = No summoner name input
+#                   3 = Bad search: the combination is not found
+#                   4 = API Key is outdated
+# ==========================================================================================
+class InvalidSearchPopup(FloatLayout):
+    # Variables pulled from from <HomeGui> leaguelookup.kv
+    popup_label = ObjectProperty(None)
+
+    def __init__(self, **kwargs):
+        super(FloatLayout, self).__init__(**kwargs)
+        self.popup = Popup(title="Error!", content=self, size_hint=(.3, .3), auto_dismiss=True)
+
+    def open_popup_1(self):
+        """
+        open_popup_1: opens the no region selected popup
+        :return:
+        """
+        self.popup_label.text = "Select a region"
+        self.popup.open()
+
+    def open_popup_2(self):
+        """
+        open_popup_2: opens the no summoner name popup
+        :return:
+        """
+        self.popup_label.text = "Enter a summoner name"
+        self.popup.open()
+
+    def open_popup_3(self):
+        """
+        open_popup_3: opens the summoner not found popup
+        :return:
+        """
+        self.popup_label.text = "Summoner not found"
+        self.popup.open()
+
+    def open_popup_4(self):
+        """
+        open_popup_4: opens the api key outdated popup
+        :return:
+        """
+        self.popup_label.text = "API Key Outdated"
+        self.popup.open()
+
+    def open_popup_5(self):
+        """
+        open_popup_5: opens the new no games played popup
+        :return:
+        """
+        self.popup_label.text = "Up to date"
+        self.popup.open()
+
+    def close_popup(self):
+        """
+        close_popup: closes any of the three popups
+        :return:
+        """
+        self.popup.dismiss()
+
+
+# ==========================================================================================
+#       Invalid Search Popup: Displays popups for bad searches
+#           Types:  1 = Reset Favorites
+#                   2 = Reset History
+# ==========================================================================================
+class ResetWarningPopup(FloatLayout):
+    # Variables pulled from from <HomeGui> leaguelookup.kv
+    popup_label = ObjectProperty(None)
+
+    def __init__(self, **kwargs):
+        super(FloatLayout, self).__init__(**kwargs)
+        self.popup = Popup(title="Are you sure?", content=self, size_hint=(.3, .3), auto_dismiss=True)
+
+    def open_popup_1(self):
+        """
+        open_popup_1: opens popup to confirm resetting favorites
+        :return:
+        """
+        self.reset_popup_label.text = "Reset Favorites?"
+        self.popup.open()
+
+    def open_popup_2(self):
+        """
+        open_popup_2: opens popup to confirm resetting history
+        :return:
+        """
+        self.reset_popup_label.text = "Reset History?"
+        self.popup.open()
+
+    def confirm_reset(self):
+        """
+        confirm_reset: Confirms the reset of the selected file
+        :return:
+        """
+        if self.reset_popup_label.text == "Reset Favorites?":
+            if os.path.isfile('favorites.csv'):
+                os.remove('favorites.csv')
+                self.popup.dismiss()
+                print("reset favorites")
+            else:
+                print("No File to reset")
+                self.popup.dismiss()
+
+        if self.reset_popup_label.text == "Reset History?":
+            if os.path.isfile('history.csv'):
+                os.remove('history.csv')
+                self.popup.dismiss()
+                print("reset history")
+            else:
+                print("No File to reset")
+                self.popup.dismiss()
+
+    def close_popup(self):
+        """
+        close_popup: closes any of the three popups
+        :return:
+        """
+        self.popup.dismiss()
 
 
 # ==========================================================================================

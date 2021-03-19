@@ -324,12 +324,14 @@ GuiManager:
 <SettingsGui>:
     name: 'settings'
 
+    # Background
     canvas:
         Rectangle:
             pos: self.pos
             size: self.size
             source: "images/background.png"
 
+    # Logo/ Return To Home
     Button:
         pos_hint: {"top":1}
         size_hint: 1, .15
@@ -337,6 +339,22 @@ GuiManager:
         on_release:
             app.root.current = "home"
             app.root.transition.direction = "right"
+
+    # Reset History
+    Button:
+        size_hint: .25, .10
+        pos_hint: {'top': .75, 'x': .1}
+        text: 'Reset Favorites'
+        on_release:
+            root.reset_favorites()
+
+    # Reset Favorite
+    Button:
+        size_hint: .25, .10
+        pos_hint: {'top': .75, 'x': .65}
+        text: 'Reset History'
+        on_release:
+            root.reset_history()
 
 
 # ==========================================================================================
@@ -487,19 +505,29 @@ GuiManager:
 # ==========================================================================================
 #       Invalid Search Popup: A Window popup for invalid searches
 # ==========================================================================================
-<InvalidSearchPopup>
-    popup_label: popupLabel
+<ResetWarningPopup>
+    reset_popup_label: resetPopupLabel
     FloatLayout:
         size_hint:(0.3, 0.3)
         pos_hint:{"center_x":0.5, "center_y":0.5}
         Label:
-            id: popupLabel
+            id: resetPopupLabel
             text: ""        # Text is added based on what error is occurring: Check class for details
             pos_hint: {"x":0.2, "top":1}
             size_hint: 0.6, 0.2
+
+        # Close Popup
         Button:
-            pos_hint: {"x":-0.25, "y":-0.4}
+            pos_hint: {"x":-0.25, "y":-1.1}
             size_hint: 1.5, 0.8
             text: "Go Back"
             on_release:
                 root.close_popup()
+
+        # Confirm
+        Button:
+            pos_hint: {"x":-0.25, "y":-0.3}
+            size_hint: 1.5, 0.8
+            text: "Yes, Reset!"
+            on_release:
+                root.confirm_reset()
