@@ -44,16 +44,21 @@ Otherwise, install:
 
 # Home GUI
  ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/homegui.png)
+
 [Table of contents](#table-of-contents)
 # Profile GUI
  ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/profilegui.png)
+
 [Table of contents](#table-of-contents)
 # Match Lookup GUI
  ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/matchlookupgui.png)
+
 [Table of contents](#table-of-contents)
 # All Champion Stats GUI
  ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/allchampionstatsgui.png)
+
 [Table of contents](#table-of-contents)
 # Single Champion Stats GUI
  ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/singlechampstatsgui.png)
+
 [Table of contents](#table-of-contents)
