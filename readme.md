@@ -33,17 +33,27 @@ Otherwise, install:
 * Displays Win/Losses
 * Scrollable match history containing Level, KDA, CS, items, game length
 * Able to view any match in further detail with 'View Match' button
+3. [Match GUI](#match-lookup-gui)
+* More detailed stats about a single game
+4. [All Champion GUI](#all-champion-stats-gui)
+* Win percentages with all champions the summoner has used in ranked games
+* Ability to sort alphabetically or by number of win/losses
+5. [Single Champion GUI](#single-champion-stats-gui)
+* Win percentages of a single champion against other
+* Ability to sort alphabetically or by number of win/losses
 
-* Future Functionality: Champion Stats button, Ranked Flex button, Ranked Solo button, Live Game button
-3. Match GUI
-4. Champion GUI
-5. Ranked Flex GUI
-6. Ranked Solo GUI
-7. Live Game GUI
-	
 # Home GUI
  ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/homegui.png)
 [Table of contents](#table-of-contents)
 # Profile GUI
  ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/profilegui.png)
+[Table of contents](#table-of-contents)
+# Match Lookup GUI
+ ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/matchlookupgui.png)
+[Table of contents](#table-of-contents)
+# All Champion Stats GUI
+ ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/allchampionstatsgui.png)
+[Table of contents](#table-of-contents)
+# Single Champion Stats GUI
+ ![alt text](https://github.com/HexRoy/LeagueAPIProjects/blob/master/images/githubrepo/singlechampstatsgui.png)
 [Table of contents](#table-of-contents)
