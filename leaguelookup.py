@@ -27,7 +27,7 @@ import datetime
 
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-06927eb0-289f-41fe-b00c-1bfce3f0ea52"
+DevelopmentAPIKey = "RGAPI-1973db9b-1cae-4f1e-a0a3-3acd4fa7e436"
 cass.set_riot_api_key(DevelopmentAPIKey)
 data_dragon_version = '11.4.1'
 
@@ -37,7 +37,6 @@ data_dragon_version = '11.4.1'
 #       choose default region
 #           if default region: auto select that for drop down
 #       color scheme
-#       'Reset All' button: search history and favorites with confirmation popup
 #   Home GUI
 #       reorder favorites
 #       Revamp region/setting + button text
@@ -561,7 +560,23 @@ class MatchGui(Screen):
         populate_match_data: adds all of the match data to the grid layout
         :return:
         """
+
+        # Clears previous data / adds headers back
         self.match_grid_layout.clear_widgets()
+
+        summoner_label = Label(text='Summoner')
+        champion_label = Label(text='Champion')
+        stats_label = Label(text='Stats')
+        items_label = Label(text='Items', size_hint=(None, None), width=self.width/10)
+        damage_label = Label(text='Damage')
+        wards_label = Label(text='Wards')
+
+        self.match_grid_layout.add_widget(summoner_label)
+        self.match_grid_layout.add_widget(champion_label)
+        self.match_grid_layout.add_widget(stats_label)
+        self.match_grid_layout.add_widget(items_label)
+        self.match_grid_layout.add_widget(damage_label)
+        self.match_grid_layout.add_widget(wards_label)
 
         match = cass.get_match(int(summoner_1.current_match_id), summoner_1.cass_region)
         red_team = match.red_team.to_dict()
@@ -624,14 +639,10 @@ class MatchGui(Screen):
 
             stats = 'Level: ' + str(level) + '\n' + KDA + '\nKDA: ' + str(calculated_kda) + '\nCS: ' + str(cs) + " (" + str(cs_per_minute) + ")"
 
-
-
             damage = summoner['stats']['totalDamageDealtToChampions']
             wards = ('Normal: %d\nKilled: %d\nPinks: %d' %(summoner['stats']['wardsPlaced'], summoner['stats']['wardsKilled'], summoner['stats']['visionWardsBoughtInGame']))
 
             items = [summoner['stats']['item0'], summoner['stats']['item1'], summoner['stats']['item2'], summoner['stats']['item3'], summoner['stats']['item4'], summoner['stats']['item5']]
-            objectives = "None"
-            towers = "None"
 
             # Adds/Creates all labels for the grid layout
             self.create_label(name)
@@ -640,8 +651,6 @@ class MatchGui(Screen):
             self.add_item_images(items)
             self.create_label(damage)
             self.create_label(wards)
-            self.create_label(objectives)
-            self.create_label(towers)
 
     def add_item_images(self, item_list):
         """
@@ -656,7 +665,7 @@ class MatchGui(Screen):
             else:
                 item_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/item/' + str(item) + ".png",
                                    allow_stretch=True, keep_ratio=False, size_hint=(None, None),
-                                   width=self.width / 14, height=self.height / 17)
+                                   width=self.width / 20, height=self.height / 17)
                 item_grid_layout.add_widget(item_image)
         self.match_grid_layout.add_widget(item_grid_layout)
 
