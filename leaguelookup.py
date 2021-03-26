@@ -27,7 +27,7 @@ import datetime
 
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-1973db9b-1cae-4f1e-a0a3-3acd4fa7e436"
+DevelopmentAPIKey = "RGAPI-83815161-e17c-41ec-a552-504ccf79be45"
 cass.set_riot_api_key(DevelopmentAPIKey)
 data_dragon_version = '11.4.1'
 
@@ -39,7 +39,6 @@ data_dragon_version = '11.4.1'
 #       color scheme
 #   Home GUI
 #       reorder favorites
-#       Revamp region/setting + button text
 #   Profiles GUI
 #       Integrate cassiopeia
 #       Don't rewrite all data to summoner 1 until you need it in the next class, only rewrite json
@@ -48,17 +47,13 @@ data_dragon_version = '11.4.1'
 #       Add variable spacing between widgets in match history scroll view, currently set to 20
 #       Add progress bar for loading matches
 #       Ranked: solo
-#           Add expand view to add more games, and throttling when loading to avoid timeout
 #           Possibly save game previously loaded for quicker access
 #       Ranked: flex
-#           Add expand view to add more games, and throttling when loading to avoid timeout
 #           Possibly save game previously loaded for quicker access
 #   Match GUI
 #       Add view summoner button next to other summoners in the game
 #   Champions
 #       Add filtering by season
-#   Single Champion
-#       win rates on one champion vs every champion you have played against
 #   Live Game
 #   CRASH : something to do with time duration of a match (possibly aram games have a different variable)
 #       It is timing because of rate limits on league api
@@ -328,6 +323,9 @@ class ProfileGui(Screen):
         super(Screen, self).__init__(**kwargs)
         self.name = "profile"
         self.url = None
+        self.loaded_games = 3
+        self.add_more_games = 3
+        self.type_games_loaded = "all"
 
     def on_enter(self):
         """
@@ -336,10 +334,12 @@ class ProfileGui(Screen):
         Otherwise load the new profile
         :return:
         """
+        self.loaded_games = 3
+
         if self.profile_summoner_name.text == summoner_1.name:
-            self.url = "https://" + str(summoner_1.region) + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(summoner_1.account_id) + "?endIndex=2&api_key=" + str(DevelopmentAPIKey)
+            self.url = "https://" + str(summoner_1.region) + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(summoner_1.account_id) + "?endIndex=" + str(self.loaded_games) + "&api_key=" + str(DevelopmentAPIKey)
         else:
-            self.url = "https://" + str(summoner_1.region) + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(summoner_1.account_id) + "?endIndex=2&api_key=" + str(DevelopmentAPIKey)
+            self.url = "https://" + str(summoner_1.region) + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(summoner_1.account_id) + "?endIndex=" + str(self.loaded_games) + "&api_key=" + str(DevelopmentAPIKey)
 
             # Summoner name and level
             self.profile_summoner_name.text = summoner_1.name
@@ -501,7 +501,8 @@ class ProfileGui(Screen):
         set_ranked_solo: sets the url to filter by solo ranked games
         :return:
         """
-        self.url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=420&endIndex=2&api_key=" + str(DevelopmentAPIKey)
+        self.url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=420&endIndex=" + str(self.loaded_games) + "&api_key=" + str(DevelopmentAPIKey)
+        self.type_games_loaded = 'solo'
         self.populate_match_history()
 
     def set_ranked_flex(self):
@@ -509,7 +510,8 @@ class ProfileGui(Screen):
         set_ranked_flex: sets the url to filter by flex ranked games
         :return:
         """
-        self.url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=440&endIndex=2&api_key=" + str(DevelopmentAPIKey)
+        self.url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=440&endIndex=" + str(self.loaded_games) + "&api_key=" + str(DevelopmentAPIKey)
+        self.type_games_loaded = 'flex'
         self.populate_match_history()
 
     def set_ranked_clash(self):
@@ -517,7 +519,8 @@ class ProfileGui(Screen):
         set_ranked_clash: sets the url to filter by clash games
         :return:
         """
-        self.url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=700&endIndex=2&api_key=" + str(DevelopmentAPIKey)
+        self.url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=700&endIndex=" + str(self.loaded_games) + "&api_key=" + str(DevelopmentAPIKey)
+        self.type_games_loaded = 'clash'
         self.populate_match_history()
 
     def set_all_games(self):
@@ -525,8 +528,24 @@ class ProfileGui(Screen):
         set_all_games: sets the url to filter by all gamess
         :return:
         """
-        self.url = "https://" + str(summoner_1.region) + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(summoner_1.account_id) + "?endIndex=2&api_key=" + str(DevelopmentAPIKey)
+        self.url = "https://" + str(summoner_1.region) + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(summoner_1.account_id) + "?endIndex=" + str(self.loaded_games) + "&api_key=" + str(DevelopmentAPIKey)
+        self.type_games_loaded = 'all'
         self.populate_match_history()
+
+    def load_more_games(self):
+        """
+        load_more_games: Increases the amount of games loaded on the profile screen on once
+        :return:
+        """
+        self.loaded_games += self.add_more_games
+        if self.type_games_loaded == "all":
+            self.set_all_games()
+        elif self.type_games_loaded == "solo":
+            self.set_ranked_solo()
+        elif self.type_games_loaded == "flex":
+            self.set_ranked_flex()
+        else:
+            self.set_ranked_clash()
 
 
 # ==========================================================================================

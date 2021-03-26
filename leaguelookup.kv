@@ -248,8 +248,8 @@ GuiManager:
 
         # Match History Scroll view
         ScrollView:
-            pos_hint: {"bottom": .2, 'x':.01}
-            size_hint: 1, .5
+            pos_hint: {"y": .05, 'x':.01}
+            size_hint: 1, .45
             GridLayout:
                 id: profileMatchHistory
                 cols: 6
@@ -257,6 +257,12 @@ GuiManager:
                 size_hint: 1, None
                 spacing: 0 , 20
 
+        Button:
+            pos_hint: {"y": .005, 'x':.4}
+            size_hint: .2, .04
+            text: 'Load More'
+            on_release:
+                root.load_more_games()
 
 # ==========================================================================================
 #       Match Gui: Contains summoner lookup, region selection, and favorites
