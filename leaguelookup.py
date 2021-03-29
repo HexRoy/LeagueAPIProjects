@@ -27,7 +27,7 @@ import datetime
 
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-83815161-e17c-41ec-a552-504ccf79be45"
+DevelopmentAPIKey = "RGAPI-8edddf25-f93c-4a1c-b9d2-8435f931da66"
 cass.set_riot_api_key(DevelopmentAPIKey)
 data_dragon_version = '11.4.1'
 
@@ -42,8 +42,6 @@ data_dragon_version = '11.4.1'
 #   Profiles GUI
 #       Integrate cassiopeia
 #       Don't rewrite all data to summoner 1 until you need it in the next class, only rewrite json
-#       Add rank to the summoner name button
-#       Add star to remove/ add to favorites
 #       Add variable spacing between widgets in match history scroll view, currently set to 20
 #       Add progress bar for loading matches
 #       Ranked: solo
@@ -334,6 +332,7 @@ class ProfileGui(Screen):
         Otherwise load the new profile
         :return:
         """
+        # Resets the amount of loaded games by default
         self.loaded_games = 3
 
         if self.profile_summoner_name.text == summoner_1.name:
@@ -344,6 +343,13 @@ class ProfileGui(Screen):
             # Summoner name and level
             self.profile_summoner_name.text = summoner_1.name
             self.profile_summoner_level.text = 'Level: ' + str(summoner_1.summoner_level)
+
+            # Adds the correct text for favorite/unfavorite button
+            df = pandas.read_csv('favorites.csv')
+            if summoner_1.name in df.values:
+                self.profile_favorite.text = 'Unfavorite'
+            else:
+                self.profile_favorite.text = 'Favorite'
 
             # For solo queue
             if summoner_1.solo_rank is not None:
@@ -547,6 +553,27 @@ class ProfileGui(Screen):
         else:
             self.set_ranked_clash()
 
+    def favorite_or_unfavorite(self):
+        """
+        favorite_or_unfavorite: Functionality for the favorite/unfavorite button
+        :return:
+        """
+        # Add the summoner to favorites
+        if self.profile_favorite.text == 'Favorite':
+            new_entry = pandas.DataFrame({'name': summoner_1.name, 'region': summoner_1.region}, index=[0])
+            # If there is no favorites file, create one
+            if not os.path.isfile('favorites.csv'):
+                new_entry.to_csv('favorites.csv', header=['name', 'region'], index=False)
+            else:
+                df = pandas.read_csv('favorites.csv').append(new_entry).drop_duplicates(['name', 'region'])
+                df.to_csv('favorites.csv', index=False)
+            self.profile_favorite.text = 'Unfavorite'
+
+        # Remove the summoner from favorites
+        else:
+            df = pandas.read_csv('favorites.csv')
+            df.drop(df.loc[df['name'] == summoner_1.name].index).to_csv('favorites.csv', index=False)
+            self.profile_favorite.text = 'Favorite'
 
 # ==========================================================================================
 #       Match Gui: Statistics about a specific game
