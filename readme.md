@@ -23,6 +23,8 @@ Otherwise, install:
 	python -m pip install kivy_deps.gstreamer==0.1.*
 * 3.Install kivy:
 	python -m pip install kivy[base] kivy_examples --no-binary kivy
+* 4.Install Microsoft's Build Tools:
+	https://visualstudio.microsoft.com/visual-cpp-build-tools/
 
 ### Table Of Contents
 1. [Home GUI](#home-gui)	
