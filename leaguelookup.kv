@@ -13,6 +13,7 @@ GuiManager:
     name: "home"
     summoner_name: summonerName
     region_selection: regionSelection
+    area_selection:areaSelection
     history_grid_layout: historyGridLayout
     favorites_grid_layout: favoritesGridLayout
     # Background image
@@ -36,6 +37,12 @@ GuiManager:
             id: regionSelection
             text: "Region"
             values: "NA", "BR", "EUN", "EUW", "JP", "KR", "LA1", "LA2", "OC", "TR", "RU"
+        Spinner:
+            size_hint: .1, .07
+            pos_hint: {"x":.7, "y":.6}
+            id: areaSelection
+            text: "Area"
+            values: "americas", "asia", "europe"
         Label:
             size_hint: .4, .07
             pos_hint: {"x":.2, "y":.66}
@@ -50,7 +57,7 @@ GuiManager:
                 root.summoner_search()
         Button:
             size_hint: .1, .07
-            pos_hint: {"x":.7, "y":.6}
+            pos_hint: {"x":.8, "y":.6}
             text: "Search"
             on_release:
                 root.summoner_search()

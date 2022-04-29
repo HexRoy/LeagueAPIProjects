@@ -27,9 +27,9 @@ import datetime
 
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-8edddf25-f93c-4a1c-b9d2-8435f931da66"
+DevelopmentAPIKey = "RGAPI-f1adc7ba-3285-46f3-b415-888554bf166b"
 cass.set_riot_api_key(DevelopmentAPIKey)
-data_dragon_version = '11.4.1'
+data_dragon_version = '12.8.1'
 
 
 # Todo
@@ -37,8 +37,6 @@ data_dragon_version = '11.4.1'
 #       choose default region
 #           if default region: auto select that for drop down
 #       color scheme
-#   Home GUI
-#       reorder favorites
 #   Profiles GUI
 #       Integrate cassiopeia
 #       Don't rewrite all data to summoner 1 until you need it in the next class, only rewrite json
@@ -106,6 +104,10 @@ class HomeGui(Screen):
             popup = InvalidSearchPopup()
             popup.open_popup_1()
             print("change Region")
+        elif self.area_selection.text == "Area":
+            popup = InvalidSearchPopup()
+            popup.open_popup_1_2()
+            print("change Region")
         # No summoner name entered creates popup
         elif self.summoner_name.text == "":
             popup = InvalidSearchPopup()
@@ -114,6 +116,7 @@ class HomeGui(Screen):
         #  There is data in both entries, now we test if the summoner exists
         else:
             region = region_conversion[self.region_selection.text]
+            area = self.area_selection.text
             # URL to lookup a summoners basic data
             url = "https://" + region + ".api.riotgames.com/lol/summoner/v4/summoners/by-name/" + \
                   self.summoner_name.text + "?api_key=" + DevelopmentAPIKey
@@ -126,6 +129,7 @@ class HomeGui(Screen):
             if code == 200:
                 summoner_1.cass_region = self.region_selection.text
                 summoner_1.region = region
+                summoner_1.area = area
                 summoner_1.set_summoner_data()
                 summoner_1.set_ranked_data()
                 self.summoner_name.text = ""
@@ -151,7 +155,7 @@ class HomeGui(Screen):
         :return:
         """
 
-        name, region = button.text.split("  :  ")
+        name, region, area = button.text.split("  :  ")
         # URL to lookup a summoners basic data
         url = "https://" + region + ".api.riotgames.com/lol/summoner/v4/summoners/by-name/" + \
               name + "?api_key=" + DevelopmentAPIKey
@@ -185,28 +189,30 @@ class HomeGui(Screen):
 
             # All data for summoner lookup
             summoner_1.region = region
+            summoner_1.area = area
             summoner_1.set_summoner_data()
             summoner_1.set_ranked_data()
             self.add_history()
             self.parent.current = "profile"
 
-    def add_favorite(self, name, region):
+    def add_favorite(self, name, region, area):
         """
         add_favorite: adds a valid summoner name + region to the favorites list
         :return:
         """
         new_entry = pandas.DataFrame({'name': [name],
-                                      'region': [region]})
+                                      'region': [region],
+                                      'area': [area]})
         # If there is no favorites file, create one
         if not os.path.isfile('favorites.csv'):
-            new_entry.to_csv('favorites.csv', header=['name', 'region'], index=False)
+            new_entry.to_csv('favorites.csv', header=['name', 'region', 'area'], index=False)
         # Else, adds name and region and deletes duplicates
         else:
             # In order to keep most recent search on top, and delete duplicates:
             #   We reverse the csv file, append the new search to the "bottom" that then becomes the top
             #   after reversing again. The we can delete all duplicates keeping the newest one making it easy to read
             #   and add to the GUI later
-            df = pandas.read_csv('favorites.csv').append(new_entry).drop_duplicates(['name', 'region'])
+            df = pandas.read_csv('favorites.csv').append(new_entry).drop_duplicates(['name', 'region', 'area'])
             df.to_csv('favorites.csv', index=False)
         self.populate_favorites()
 
@@ -231,12 +237,13 @@ class HomeGui(Screen):
         self.favorites_grid_layout.clear_widgets()
         if not os.path.isfile('favorites.csv'):
             new_entry = pandas.DataFrame({'name': ['HexRoy'],
-                                          'region': ['NA1']})
-            new_entry.to_csv('favorites.csv', header=['name', 'region'], index=False)
+                                          'region': ['NA1'],
+                                          'area': ['americas']})
+            new_entry.to_csv('favorites.csv', header=['name', 'region', 'area'], index=False)
 
         df = pandas.read_csv('favorites.csv')
         for index, line in df.iterrows():
-            summoner_button = Button(background_normal="images/button background.png", color=(0, 0, 0, 1), text=line['name'] + "  :  " + line['region'], size_hint=(None, None),
+            summoner_button = Button(background_normal="images/button background.png", color=(0, 0, 0, 1), text=line['name'] + "  :  " + line['region'] + "  :  " + line['area'], size_hint=(None, None),
                                      height=self.height / 10, width=self.width / 3.5)
             summoner_button.bind(on_press=partial(self.history_search))
 
@@ -254,10 +261,11 @@ class HomeGui(Screen):
         :return:
         """
         new_entry = pandas.DataFrame({'name': [summoner_1.name],
-                                      'region': [summoner_1.region]})
+                                      'region': [summoner_1.region],
+                                      'area': [summoner_1.area]})
         # If there is no history file, create one
         if not os.path.isfile('history.csv'):
-            new_entry.to_csv('history.csv', header=['name', 'region'], index=False)
+            new_entry.to_csv('history.csv', header=['name', 'region', 'area'], index=False)
         # Else, adds new search and deletes duplicates
         else:
             # In order to keep most recent search on top, and delete duplicates:
@@ -265,7 +273,7 @@ class HomeGui(Screen):
             #   after reversing again. The we can delete all duplicates keeping the newest one making it easy to read
             #   and add to the GUI later
             df = pandas.read_csv('history.csv').iloc[::-1].append(new_entry)
-            df.iloc[::-1].drop_duplicates(['name', 'region']).to_csv('history.csv', index=False)
+            df.iloc[::-1].drop_duplicates(['name', 'region', 'area']).to_csv('history.csv', index=False)
 
     def remove_history(self, button):
         """
@@ -280,12 +288,12 @@ class HomeGui(Screen):
         # Gets name and region to be added to favorites before its removed from history
         name = df.iloc[int(index)]['name']
         region = df.iloc[int(index)]['region']
-
+        area = df.iloc[int(index)]['area']
         # Removes name from history
         df.drop(int(index)).to_csv('history.csv', index=False)
 
         self.populate_history()
-        self.add_favorite(name, region)
+        self.add_favorite(name, region, area)
 
     def populate_history(self):
         """
@@ -297,12 +305,13 @@ class HomeGui(Screen):
 
         if not os.path.isfile('history.csv'):
             new_entry = pandas.DataFrame({'name': ['HexRoy'],
-                                          'region': ['NA1']})
-            new_entry.to_csv('history.csv', header=['name', 'region'], index=False)
+                                          'region': ['NA1'],
+                                          'area': ['americas']})
+            new_entry.to_csv('history.csv', header=['name', 'region', 'area'], index=False)
 
         df = pandas.read_csv('history.csv')
         for index, line in df.iterrows():
-            summoner_button = Button(background_normal="images/button background2.png", text=line['name']+"  :  "+line['region'], size_hint=(None, None), height=self.height/10, width=self.width/3.5)
+            summoner_button = Button(background_normal="images/button background2.png", text=line['name'] + "  :  " + line['region'] + "  :  " + line['area'], size_hint=(None, None), height=self.height/10, width=self.width/3.5)
             summoner_button.bind(on_press=partial(self.history_search))
 
             favorite_button = Button(background_normal="images/blackstar.png", background_down="images/goldstar.png", size_hint=(None, None), height=self.height/10, width=self.width/10)
@@ -336,9 +345,9 @@ class ProfileGui(Screen):
         self.loaded_games = 3
 
         if self.profile_summoner_name.text == summoner_1.name:
-            self.url = "https://" + str(summoner_1.region) + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(summoner_1.account_id) + "?endIndex=" + str(self.loaded_games) + "&api_key=" + str(DevelopmentAPIKey)
+            self.url = "https://" + str(summoner_1.area) + ".api.riotgames.com/lol/match/v5/matches/by-puuid/" + str(summoner_1.puuid) + "/ids?start=0&count=" + str(self.loaded_games) + "&api_key=" + str(DevelopmentAPIKey)
         else:
-            self.url = "https://" + str(summoner_1.region) + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(summoner_1.account_id) + "?endIndex=" + str(self.loaded_games) + "&api_key=" + str(DevelopmentAPIKey)
+            self.url = "https://" + str(summoner_1.area) + ".api.riotgames.com/lol/match/v5/matches/by-puuid/" + str(summoner_1.puuid) + "/ids?start=0&count=" + str(self.loaded_games) + "&api_key=" + str(DevelopmentAPIKey)
 
             # Summoner name and level
             self.profile_summoner_name.text = summoner_1.name
@@ -380,86 +389,76 @@ class ProfileGui(Screen):
         populate_match_history: populates the match history grid, with most recent 20 games
         :return:
         """
+
         self.profile_match_history.clear_widgets()
         match_history = requests.get(self.url)
         match_history = match_history.json()
 
         # Creates a champion id to name conversion dictionary
-        with open('data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
+        with open('data_dragon/' + data_dragon_version + '/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
             champion_dict = json.load(champion_data)
         champion_id_to_name = {}
         for key in champion_dict['data']:
             row = champion_dict['data'][key]
             champion_id_to_name[row['key']] = row['id']
 
-        for match in match_history['matches']:
-            # View match button
-            view_button = Button(text="View Match", size_hint=(None, None), height=self.height/8, width=self.width/9)
-            view_button.id = str(match['gameId'])
-            view_button.bind(on_press=partial(self.match_search))
-            self.profile_match_history.add_widget(view_button)
-
-            # The champion image
-            champion_name = champion_id_to_name.get(str(match['champion']))
-
-            if champion_name is not None:
-                champion_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/champion/' + champion_name + '.png', size_hint=(None, None), height=self.height/8)
-                self.profile_match_history.add_widget(champion_image)
-            else:
-                self.profile_match_history.add_widget(Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/champion/None.png', size_hint=(None, None), height=self.height/8))
+        for match in match_history:
 
             # Obtains the matches data
-            url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matches/' + str(match['gameId']) +'?api_key=' + DevelopmentAPIKey
+            url = 'https://' + summoner_1.area + '.api.riotgames.com/lol/match/v5/matches/' + str(match) + '?api_key=' + DevelopmentAPIKey
             match_data = requests.get(url)
             match_data = match_data.json()
 
-            # To get game length --> minutes:seconds
-            match_length = match_data['gameDuration']/60
-            minutes = int(match_length)
-            seconds = (match_length*60) % 60
-            time = ("%d:%02d" % (minutes, seconds))
+            # Obtains the champion name the summoner was playing during the match
+            for player in match_data['info']['participants']:
+                if player['puuid'] == summoner_1.puuid:
+                    champion_name = player['championName']
 
-            for players in match_data['participants']:
-                if players['championId'] == match['champion']:
+                    # View match button
+                    view_button = Button(text="View Match", size_hint=(None, None), height=self.height/8, width=self.width/9)
+                    view_button.id = str(match)
+                    view_button.bind(on_press=partial(self.match_search))
+                    self.profile_match_history.add_widget(view_button)
 
-                    # TODO convert ids to name/get icon --> datadragon summoner
-                    spell_1_id = players['spell1Id']
-                    spell_2_id = players['spell2Id']
-                    keystone_primary = None
-                    keystone_secondary = None
-                    rune_1 = None
-                    rune_2 = None
-                    rune_3 = None
-                    win = players['stats']['win']
-                    largest_multikill = players['stats']['largestMultiKill']
-                    largest_killingspree = players['stats']['largestKillingSpree']
-                    kills = players['stats']['kills']
-                    deaths = players['stats']['deaths']
-                    assists = players['stats']['assists']
-                    champion_level = players['stats']['champLevel']
-                    kda = ("%d/%d/%d" % (kills, deaths, assists))
-                    if deaths == 0:
-                        calculated_kda = "Infinite"
+                    # Gets the champion image
+                    if champion_name is not None:
+                        champion_image = Image(source='data_dragon/' + data_dragon_version + '/img/champion/' + champion_name + '.png', size_hint=(None, None), height=self.height/8)
+                        self.profile_match_history.add_widget(champion_image)
                     else:
-                        calculated_kda = round(((kills + assists) / deaths), 2)
-                    cs = players['stats']['totalMinionsKilled'] + players['stats']['neutralMinionsKilled']
+                        self.profile_match_history.add_widget(Image(source='data_dragon/' + data_dragon_version + '/img/champion/None.png', size_hint=(None, None), height=self.height/8))
+
+                    # To get game length --> minutes:seconds
+                    match_length = match_data['info']['gameDuration']/60
+                    minutes = int(match_length)
+                    seconds = (match_length*60) % 60
+                    time = ("%d:%02d" % (minutes, seconds))
+
+                    spell_1_id = player['summoner1Id']
+                    spell_2_id = player['summoner2Id']
+                    champion_level = player['champLevel']
+                    kda = round(player['challenges']['kda'], 2)
+                    kills = player['kills']
+                    deaths = player['deaths']
+                    assists = player['assists']
+                    kills_deaths_assists = str(kills) + '/' + str(deaths) + '/' + str(assists)
+                    cs = player['totalMinionsKilled'] + player['neutralMinionsKilled']
                     cs_per_minute = round(cs/minutes, 1)
 
-                    kda_label = Label(text="Level: " + str(champion_level) + "\n" + kda + "\nKDA: " + str(calculated_kda) + "\nCS: " + str(cs) + " (" + str(cs_per_minute) + ")", size_hint=(None, None), height=self.height/8)
+                    kda_label = Label(text="Level: " + str(champion_level) + "\n" + kills_deaths_assists + "\nKDA: " + str(kda) + "\nCS: " + str(cs) + " (" + str(cs_per_minute) + ")", size_hint=(None, None), height=self.height/8)
                     self.profile_match_history.add_widget(kda_label)
 
                     item_grid_layout = GridLayout(cols=3)
                     for i in range(6):
-                        item = players['stats']['item%d' % i]
+                        item = player['item%d' % i]
                         if item == 0:
                             pass
                         else:
-                            item_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/item/' + str(item) + ".png",allow_stretch=True, keep_ratio=False, size_hint=(None, None), width=self.width/14, height=self.height/17)
+                            item_image = Image(source='data_dragon/' + data_dragon_version + '/img/item/' + str(item) + ".png",allow_stretch=True, keep_ratio=False, size_hint=(None, None), width=self.width/14, height=self.height/17)
                             item_grid_layout.add_widget(item_image)
                     self.profile_match_history.add_widget(item_grid_layout)
 
                     # Opens the summoner spells json file
-                    with open('data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/data/en_US/summoner.json', 'r', encoding="utf-8") as summoner_spells:
+                    with open('data_dragon/' + data_dragon_version + '/data/en_US/summoner.json', 'r', encoding="utf-8") as summoner_spells:
                         spell_dict = json.load(summoner_spells)
 
                     # Finds spell 1
@@ -481,9 +480,9 @@ class ProfileGui(Screen):
 
                     # Adds spells and ward icon to match history
                     spell_grid_layout = GridLayout(cols=3, spacing=(.1, 0))
-                    ward_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/item/' + str(players['stats']['item6']) + ".png",  keep_ratio=False, size_hint=(None, None), width=self.width / 14, height=self.height / 17)
-                    spell1_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/spell/' + spell_1_name + ".png", allow_stretch=True, keep_ratio=False, size_hint=(None, None), width=self.width / 14, height=self.height / 17)
-                    spell2_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/spell/' + spell_2_name + ".png", allow_stretch=True, keep_ratio=False, size_hint=(None, None), width=self.width / 14, height=self.height / 17)
+                    ward_image = Image(source='data_dragon/' + data_dragon_version + '/img/item/' + str(player['item6']) + ".png",  keep_ratio=False, size_hint=(None, None), width=self.width / 14, height=self.height / 17)
+                    spell1_image = Image(source='data_dragon/' + data_dragon_version + '/img/spell/' + spell_1_name + ".png", allow_stretch=True, keep_ratio=False, size_hint=(None, None), width=self.width / 14, height=self.height / 17)
+                    spell2_image = Image(source='data_dragon/' + data_dragon_version + '/img/spell/' + spell_2_name + ".png", allow_stretch=True, keep_ratio=False, size_hint=(None, None), width=self.width / 14, height=self.height / 17)
                     spell_grid_layout.add_widget(ward_image)
                     spell_grid_layout.add_widget(spell1_image)
                     spell_grid_layout.add_widget(spell2_image)
@@ -507,7 +506,8 @@ class ProfileGui(Screen):
         set_ranked_solo: sets the url to filter by solo ranked games
         :return:
         """
-        self.url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=420&endIndex=" + str(self.loaded_games) + "&api_key=" + str(DevelopmentAPIKey)
+        queue_type = '420'
+        self.url = 'https://' + summoner_1.area + '.api.riotgames.com/lol/match/v5/matches/by-puuid/' + summoner_1.puuid + '/ids?queue=' + queue_type + '&start=0&count=' + str(self.loaded_games) + '&api_key=' + str(DevelopmentAPIKey)
         self.type_games_loaded = 'solo'
         self.populate_match_history()
 
@@ -516,7 +516,8 @@ class ProfileGui(Screen):
         set_ranked_flex: sets the url to filter by flex ranked games
         :return:
         """
-        self.url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=440&endIndex=" + str(self.loaded_games) + "&api_key=" + str(DevelopmentAPIKey)
+        queue_type = '440'
+        self.url = 'https://' + summoner_1.area + '.api.riotgames.com/lol/match/v5/matches/by-puuid/' + summoner_1.puuid + '/ids?queue=' + queue_type + '&start=0&count=' + str(self.loaded_games) + '&api_key=' + str(DevelopmentAPIKey)
         self.type_games_loaded = 'flex'
         self.populate_match_history()
 
@@ -525,7 +526,8 @@ class ProfileGui(Screen):
         set_ranked_clash: sets the url to filter by clash games
         :return:
         """
-        self.url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=700&endIndex=" + str(self.loaded_games) + "&api_key=" + str(DevelopmentAPIKey)
+        queue_type = '700'
+        self.url = 'https://' + summoner_1.area + '.api.riotgames.com/lol/match/v5/matches/by-puuid/' + summoner_1.puuid + '/ids?queue=' + queue_type + '&start=0&count=' + str(self.loaded_games) + '&api_key=' + str(DevelopmentAPIKey)
         self.type_games_loaded = 'clash'
         self.populate_match_history()
 
@@ -534,7 +536,7 @@ class ProfileGui(Screen):
         set_all_games: sets the url to filter by all gamess
         :return:
         """
-        self.url = "https://" + str(summoner_1.region) + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(summoner_1.account_id) + "?endIndex=" + str(self.loaded_games) + "&api_key=" + str(DevelopmentAPIKey)
+        self.url = 'https://' + summoner_1.area + '.api.riotgames.com/lol/match/v5/matches/by-puuid/' + summoner_1.puuid + '/ids?start=0&count=' + str(self.loaded_games) + '&api_key=' + str(DevelopmentAPIKey)
         self.type_games_loaded = 'all'
         self.populate_match_history()
 
@@ -591,14 +593,11 @@ class MatchGui(Screen):
         :return:
         """
 
-        #TODO Posible remove
         # Obtains the matches data
-        url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matches/' + str(
-            summoner_1.current_match_id) + '?api_key=' + DevelopmentAPIKey
+        url = 'https://' + summoner_1.area + '.api.riotgames.com/lol/match/v5/matches/' + str(summoner_1.current_match_id) + '?api_key=' + DevelopmentAPIKey
         match_data = requests.get(url)
         match_data = match_data.json()
         self.match_data = match_data
-
         self.populate_match_data()
 
     def populate_match_data(self):
@@ -624,79 +623,139 @@ class MatchGui(Screen):
         self.match_grid_layout.add_widget(damage_label)
         self.match_grid_layout.add_widget(wards_label)
 
-        match = cass.get_match(int(summoner_1.current_match_id), summoner_1.cass_region)
-        red_team = match.red_team.to_dict()
-        blue_team = match.blue_team.to_dict()
+        self.team_loop()
 
-        self.team_loop(red_team)
-        self.team_loop(blue_team)
-
-    def team_loop(self, team_data):
+    def team_loop(self):
         """
-        team_loop: loops through one of the teams to populate the match grid layout
-        :param team_data: a dict containing all of the teams data
+        team_loop: loops twice, once for each team to have summoners separated by team
         :return:
         """
 
-        if team_data['isWinner']:
-            text_color = '11d111'   # Green
-        else:
-            text_color = 'ff3333'   # Red
+        # Loop for team '100'
+        for player in self.match_data['info']['participants']:
+            if player['teamId'] == 100:
+                if player['win'] is True:
+                    text_color = '11d111'  # Green
+                else:
+                    text_color = 'ff3333'  # Red
 
-        for summoner in team_data['participants']:
-            name = summoner['summonerName']
-            champion_id = summoner['championId']
+                name = player['summonerName']
+                champion_id = player['championId']
 
-            # Creates a champion id to name conversion dictionary
-            with open('data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
-                champion_dict = json.load(champion_data)
+                # Creates a champion id to name conversion dictionary
+                with open('data_dragon/' + data_dragon_version + '/data/en_US/champion.json', 'r',
+                          encoding="utf-8") as champion_data:
+                    champion_dict = json.load(champion_data)
 
-            champion_id_to_name = {}
-            for key in champion_dict['data']:
-                row = champion_dict['data'][key]
-                champion_id_to_name[row['key']] = row['id']
+                champion_id_to_name = {}
+                for key in champion_dict['data']:
+                    row = champion_dict['data'][key]
+                    champion_id_to_name[row['key']] = row['id']
 
-            champion_name = champion_id_to_name.get(str(champion_id))
-            if champion_name is not None:
-                champion_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/champion/' + champion_name + '.png', size_hint=(None, None), height=self.height / 8, width=self.width/10)
-            else:
-                champion_image = Image(source='data_dragon_1' + data_dragon_version + '/' + data_dragon_version + '/img/champion/None.png', size_hint=(None, None), height=self.height / 8, width=self.width / 10)
+                champion_name = champion_id_to_name.get(str(champion_id))
+                if champion_name is not None:
+                    champion_image = Image(
+                        source='data_dragon/' + data_dragon_version + '/img/champion/' + champion_name + '.png',
+                        size_hint=(None, None), height=self.height / 8, width=self.width / 10)
+                else:
+                    champion_image = Image(source='data_dragon_1/' + data_dragon_version + '/img/champion/None.png',
+                                           size_hint=(None, None), height=self.height / 8, width=self.width / 10)
 
-            #TODO REmove
-            pprint.pprint(summoner)
-            print("========================================================================================================================================================================")
+                level = player['champLevel']
 
-            level = summoner['stats']['champLevel']
+                # Obtains KDA Information
+                kills_deaths_assists = ("%d/%d/%d" % (player['kills'], player['deaths'], player['assists']))
+                kda = round(player['challenges']['kda'], 2)
 
-            # Obtains KDA Information
-            KDA = ("%d/%d/%d" % (summoner['stats']['kills'], summoner['stats']['deaths'], summoner['stats']['assists']))
-            if summoner['stats']['deaths'] == 0:
-                calculated_kda = "Infinite"
-            else:
-                calculated_kda = round(
-                    ((summoner['stats']['kills'] + summoner['stats']['assists']) / summoner['stats']['deaths']), 2)
+                # To get game length --> minutes:seconds
+                match_length = self.match_data['info']['gameDuration'] / 60
+                minutes = int(match_length)
 
-            # To get game length --> minutes:seconds
-            match_length = self.match_data['gameDuration'] / 60
-            minutes = int(match_length)
+                cs = player['neutralMinionsKilled'] + player['totalMinionsKilled']
+                cs_per_minute = round(cs / minutes, 1)
 
-            cs = summoner['stats']['neutralMinionsKilled'] + summoner['stats']['totalMinionsKilled']
-            cs_per_minute = round(cs / minutes, 1)
+                stats = 'Level: ' + str(level) + '\n' + str(kills_deaths_assists) + '\nKDA: ' + str(kda) + '\nCS: ' + str(
+                    cs) + " (" + str(cs_per_minute) + ")"
 
-            stats = 'Level: ' + str(level) + '\n' + KDA + '\nKDA: ' + str(calculated_kda) + '\nCS: ' + str(cs) + " (" + str(cs_per_minute) + ")"
+                damage = player['totalDamageDealtToChampions']
+                wards = ('Normal: %d\nKilled: %d\nPinks: %d' % (
+                player['wardsPlaced'], player['wardsKilled'],
+                player['visionWardsBoughtInGame']))
 
-            damage = summoner['stats']['totalDamageDealtToChampions']
-            wards = ('Normal: %d\nKilled: %d\nPinks: %d' %(summoner['stats']['wardsPlaced'], summoner['stats']['wardsKilled'], summoner['stats']['visionWardsBoughtInGame']))
+                items = [player['item0'], player['item1'], player['item2'],player['item3'], player['item4'], player['item5']]
 
-            items = [summoner['stats']['item0'], summoner['stats']['item1'], summoner['stats']['item2'], summoner['stats']['item3'], summoner['stats']['item4'], summoner['stats']['item5']]
+                # Adds/Creates all labels for the grid layout
+                self.create_label(name)
+                self.match_grid_layout.add_widget(champion_image)
+                self.create_label(stats)
+                self.add_item_images(items)
+                self.create_label(damage)
+                self.create_label(wards)
 
-            # Adds/Creates all labels for the grid layout
-            self.create_label(name)
-            self.match_grid_layout.add_widget(champion_image)
-            self.create_label(stats)
-            self.add_item_images(items)
-            self.create_label(damage)
-            self.create_label(wards)
+        # Loops for team '200'
+        for player in self.match_data['info']['participants']:
+            if player['teamId'] == 200:
+                if player['win'] is True:
+                    if player['win'] is True:
+                        text_color = '11d111'  # Green
+                    else:
+                        text_color = 'ff3333'  # Red
+
+                name = player['summonerName']
+                champion_id = player['championId']
+
+                # Creates a champion id to name conversion dictionary
+                with open('data_dragon/' + data_dragon_version + '/data/en_US/champion.json', 'r',
+                          encoding="utf-8") as champion_data:
+                    champion_dict = json.load(champion_data)
+
+                champion_id_to_name = {}
+                for key in champion_dict['data']:
+                    row = champion_dict['data'][key]
+                    champion_id_to_name[row['key']] = row['id']
+
+                champion_name = champion_id_to_name.get(str(champion_id))
+                if champion_name is not None:
+                    champion_image = Image(
+                        source='data_dragon/' + data_dragon_version + '/img/champion/' + champion_name + '.png',
+                        size_hint=(None, None), height=self.height / 8, width=self.width / 10)
+                else:
+                    champion_image = Image(source='data_dragon_1/' + data_dragon_version + '/img/champion/None.png',
+                                           size_hint=(None, None), height=self.height / 8, width=self.width / 10)
+
+                level = player['champLevel']
+
+                # Obtains KDA Information
+                kills_deaths_assists = ("%d/%d/%d" % (player['kills'], player['deaths'], player['assists']))
+                kda = round(player['challenges']['kda'], 2)
+
+                # To get game length --> minutes:seconds
+                match_length = self.match_data['info']['gameDuration'] / 60
+                minutes = int(match_length)
+
+                cs = player['neutralMinionsKilled'] + player['totalMinionsKilled']
+                cs_per_minute = round(cs / minutes, 1)
+
+                stats = 'Level: ' + str(level) + '\n' + str(kills_deaths_assists) + '\nKDA: ' + str(
+                    kda) + '\nCS: ' + str(
+                    cs) + " (" + str(cs_per_minute) + ")"
+
+                damage = player['totalDamageDealtToChampions']
+                wards = ('Normal: %d\nKilled: %d\nPinks: %d' % (
+                    player['wardsPlaced'], player['wardsKilled'],
+                    player['visionWardsBoughtInGame']))
+
+                items = [player['item0'], player['item1'], player['item2'], player['item3'], player['item4'],
+                         player['item5']]
+
+                # Adds/Creates all labels for the grid layout
+                self.create_label(name)
+                self.match_grid_layout.add_widget(champion_image)
+                self.create_label(stats)
+                self.add_item_images(items)
+                self.create_label(damage)
+                self.create_label(wards)
+
 
     def add_item_images(self, item_list):
         """
@@ -709,7 +768,7 @@ class MatchGui(Screen):
             if item == 0:
                 pass
             else:
-                item_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/item/' + str(item) + ".png",
+                item_image = Image(source='data_dragon/' + data_dragon_version + '/img/item/' + str(item) + ".png",
                                    allow_stretch=True, keep_ratio=False, size_hint=(None, None),
                                    width=self.width / 20, height=self.height / 17)
                 item_grid_layout.add_widget(item_image)
@@ -765,8 +824,8 @@ class AllChampionsGui(Screen):
         self.win_rate_sort = False
         self.no_new_data = False
 
-        # Beginning of season 11 - Epoch millisecond
-        self.last_update = 1610118000000
+        # Beginning of season 12 - Epoch seconds
+        self.last_update = 1641560460
 
     def on_enter(self, *args):
         """
@@ -801,12 +860,24 @@ class AllChampionsGui(Screen):
         self.win_rates = {}
         self.all_kda = {}
 
-        self.account_url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=420&beginTime=" + str(self.last_update) + "&api_key=" + str(DevelopmentAPIKey)
-
+        #self.account_url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=420&beginTime=" + str(self.last_update) + "&api_key=" + str(DevelopmentAPIKey)
+        self.account_url = 'https://' + summoner_1.area + '.api.riotgames.com/lol/match/v5/matches/by-puuid/' + summoner_1.puuid + '/ids?startTime=' + str(self.last_update) + '&queue=420&api_key=' + str(DevelopmentAPIKey)
         account_details = requests.get(self.account_url)
 
         # Checking for 404 error: no new data
         status = account_details.status_code
+
+
+
+
+        print(self.account_url)
+        print(self.last_update)
+        print(account_details.json())
+        print(status)
+
+
+
+
 
         # If there are new games
         if status != 404:
@@ -827,12 +898,22 @@ class AllChampionsGui(Screen):
                     self.win_rates[champion_name] = [wins, losses]
                     self.all_kda[champion_name] = [kills_assists, deaths]
 
+
+
+
+
+
+
             account_details = account_details.json()
             total_games = account_details['totalGames']
             begin_index = 0
 
+
+
+
+
             # Creates a champion id to name conversion dictionary
-            with open('data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/data/en_US/champion.json', 'r',
+            with open('data_dragon/' + data_dragon_version + '/data/en_US/champion.json', 'r',
                       encoding="utf-8") as champion_data:
                 champion_dict = json.load(champion_data)
             champion_id_to_name = {}
@@ -920,10 +1001,10 @@ class AllChampionsGui(Screen):
             # Champion Name + Icon
             champion_name = line['champion_name']
             if not pandas.isna(line['champion_name']):
-                champion_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/champion/' + champion_name + '.png',
+                champion_image = Image(source='data_dragon/' + data_dragon_version + '/img/champion/' + champion_name + '.png',
                                        size_hint=(None, None), height=self.height / 8)
             else:
-                champion_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/champion/None.png', size_hint=(None, None), height=self.height / 8)
+                champion_image = Image(source='data_dragon/' + data_dragon_version + '/img/champion/None.png', size_hint=(None, None), height=self.height / 8)
             champion_name_label = Label(text=str(champion_name), size_hint=(None, None), height=self.height/8)
 
             # Converts the string representation of the win rate list list, to a list
@@ -1092,8 +1173,8 @@ class SingleChampionGui(Screen):
 
         self.no_new_data = False
 
-        # When season 11 started - Epoch millisecond
-        self.last_update = 1610118000000
+        # When season 12 started - Epoch seconds
+        self.last_update = 1641560460
 
     def on_enter(self, *args):
         """
@@ -1129,7 +1210,7 @@ class SingleChampionGui(Screen):
         self.kda = {}
 
         # Creates champion name to id conversion
-        with open('data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
+        with open('data_dragon/' + data_dragon_version + '/data/en_US/champion.json', 'r', encoding="utf-8") as champion_data:
             champion_dict = json.load(champion_data)
         champion_id_to_name = {}
         for key in champion_dict['data']:
@@ -1298,10 +1379,10 @@ class SingleChampionGui(Screen):
             # Champion Name + Icon
             champion_name = line['champion_name']
             if not pandas.isna(line['champion_name']):
-                champion_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/champion/' + champion_name + '.png',
+                champion_image = Image(source='data_dragon/' + data_dragon_version + '/img/champion/' + champion_name + '.png',
                                        size_hint=(None, None), height=self.height / 8)
             else:
-                champion_image = Image(source='data_dragon_' + data_dragon_version + '/' + data_dragon_version + '/img/champion/None.png', size_hint=(None, None), height=self.height / 8)
+                champion_image = Image(source='data_dragon/' + data_dragon_version + '/img/champion/None.png', size_hint=(None, None), height=self.height / 8)
             champion_name_label = Label(text=str(champion_name), size_hint=(None, None), height=self.height/8)
 
             # Converts the string representation of the win rate list list, to a list
@@ -1427,6 +1508,14 @@ class InvalidSearchPopup(FloatLayout):
         self.popup_label.text = "Select a region"
         self.popup.open()
 
+    def open_popup_1_2(self):
+        """
+        open_popup_1: opens the no region selected popup
+        :return:
+        """
+        self.popup_label.text = "Select an area"
+        self.popup.open()
+
     def open_popup_2(self):
         """
         open_popup_2: opens the no summoner name popup
@@ -1539,6 +1628,7 @@ class Summoner:
         self.cass_region = None
 
         self.region = None
+        self.area = None
         self.summoner_data = None
         self.account_id = None
         self.puuid = None
