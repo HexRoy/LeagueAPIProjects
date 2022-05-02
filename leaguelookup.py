@@ -27,7 +27,7 @@ import datetime
 
 
 # Key needed to lookup summoner information with riot's api
-DevelopmentAPIKey = "RGAPI-f1adc7ba-3285-46f3-b415-888554bf166b"
+DevelopmentAPIKey = "RGAPI-8cfe52cc-b845-43cc-8de9-79747becf953"
 cass.set_riot_api_key(DevelopmentAPIKey)
 data_dragon_version = '12.8.1'
 
@@ -822,7 +822,7 @@ class AllChampionsGui(Screen):
         self.all_kda = {}
         self.champ_sort = False
         self.win_rate_sort = False
-        self.no_new_data = False
+        self.more_games = True
 
         # Beginning of season 12 - Epoch seconds
         self.last_update = 1641560460
@@ -860,134 +860,77 @@ class AllChampionsGui(Screen):
         self.win_rates = {}
         self.all_kda = {}
 
-        #self.account_url = "https://" + summoner_1.region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + summoner_1.account_id + "?queue=420&beginTime=" + str(self.last_update) + "&api_key=" + str(DevelopmentAPIKey)
-        self.account_url = 'https://' + summoner_1.area + '.api.riotgames.com/lol/match/v5/matches/by-puuid/' + summoner_1.puuid + '/ids?startTime=' + str(self.last_update) + '&queue=420&api_key=' + str(DevelopmentAPIKey)
-        account_details = requests.get(self.account_url)
+        # If there is previously saved data
+        if os.path.isfile('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv'):
+            df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
 
-        # Checking for 404 error: no new data
-        status = account_details.status_code
+            for index, line in df.iterrows():
+                if pandas.isna(line['champion_name']):
+                    print("pandas.isna(line['champion_name']", pandas.isna(line['champion_name']))
+                    champion_name = 'None'
+                else:
+                    champion_name = line['champion_name']
+                wins = line['wins']
+                losses = line['losses']
+                kills_assists = line['kills_assists']
+                deaths = line['deaths']
 
+                self.win_rates[champion_name] = [wins, losses]
+                self.all_kda[champion_name] = [kills_assists, deaths]
 
+        start = 0
+        games_loaded = 1
+        while self.more_games:
 
+            self.account_url = 'https://' + summoner_1.area + '.api.riotgames.com/lol/match/v5/matches/by-puuid/' + summoner_1.puuid + '/ids?startTime=' + str(self.last_update) + '&queue=420&start=' + str(start) + '&count=100&api_key=' + str(DevelopmentAPIKey)
+            match_ids = requests.get(self.account_url)
+            match_ids = match_ids.json()
+            for match in match_ids:
+                self.match_url = 'https://' + str(summoner_1.area) + '.api.riotgames.com/lol/match/v5/matches/' + str(match) + '?api_key=' + DevelopmentAPIKey
 
-        print(self.account_url)
-        print(self.last_update)
-        print(account_details.json())
-        print(status)
+                match_data = requests.get(self.match_url)
+                match = match_data.json()
 
+                # Todo Using sleep to delay the calls to riot api
+                sleep(2)
+                print('sleeping 2 seconds, to limit api calls')
 
+                # Obtains the champion name the summoner was playing during the match
+                for player in match['info']['participants']:
+                    if player['puuid'] == summoner_1.puuid:
+                        current_champion_name = player['championName']
 
-
-
-        # If there are new games
-        if status != 404:
-            # If there is previously saved data
-            if os.path.isfile('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv'):
-                df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
-                for index, line in df.iterrows():
-                    if pandas.isna(line['champion_name']):
-                        print("pandas.isna(line['champion_name']", pandas.isna(line['champion_name']))
-                        champion_name = 'None'
-                    else:
-                        champion_name = line['champion_name']
-                    wins = line['wins']
-                    losses = line['losses']
-                    kills_assists = line['kills_assists']
-                    deaths = line['deaths']
-
-                    self.win_rates[champion_name] = [wins, losses]
-                    self.all_kda[champion_name] = [kills_assists, deaths]
-
-
-
-
-
-
-
-            account_details = account_details.json()
-            total_games = account_details['totalGames']
-            begin_index = 0
-
-
-
-
-
-            # Creates a champion id to name conversion dictionary
-            with open('data_dragon/' + data_dragon_version + '/data/en_US/champion.json', 'r',
-                      encoding="utf-8") as champion_data:
-                champion_dict = json.load(champion_data)
-            champion_id_to_name = {}
-            for key in champion_dict['data']:
-                row = champion_dict['data'][key]
-                champion_id_to_name[row['key']] = row['id']
-
-            # Loops through the sets of 100 games
-            while begin_index < total_games:
-                self.match_url = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matchlists/by-account/' + summoner_1.account_id + '?queue=420&beginTime=' + str(self.last_update) + '&beginIndex=' + str(begin_index) + '&api_key=' + str(DevelopmentAPIKey)
-                match_history = requests.get(self.match_url)
-                match_history = match_history.json()
-                matches = match_history['matches']
-
-                # Loops through all matches in match_data
-                for match in matches:
-
-                    # Todo Using sleep to delay the calls to riot api
-                    sleep(2)
-                    print('sleeping 2 seconds')
-
-                    current_champ = match['champion']
-                    current_champion_name = champion_id_to_name.get(str(current_champ))
-
-                    game_id = str(match['gameId'])
-
-                    match_lookup = 'https://' + summoner_1.region + '.api.riotgames.com/lol/match/v4/matches/' + game_id + '?api_key=' + str(DevelopmentAPIKey)
-                    match_lookup = requests.get(match_lookup)
-                    match_lookup = match_lookup.json()
-
-                    #Todo:
-                    # Bug: crashing -
-                    #   for summoner in match_lookup['participants']:
-                    #   KeyError: 'participants'
-                    #   Caused by 500 status code: Timeout
-                    print(match_lookup)
-
-                    # Loops through each player in the match
-                    for summoner in match_lookup['participants']:
-                        if summoner['championId'] == current_champ:
-
-                            # Calculates the winrates for each champion
-                            win = summoner['stats']['win']
-
-                            if current_champion_name in self.win_rates:
-                                if win is True:
-                                    self.win_rates[current_champion_name][0] = self.win_rates[current_champion_name][0]+1
-                                else:
-                                    self.win_rates[current_champion_name][1] = self.win_rates[current_champion_name][1]+1
+                        # Calculates the win rates
+                        win = player['win']
+                        if current_champion_name in self.win_rates:
+                            if win is True:
+                                self.win_rates[current_champion_name][0] = self.win_rates[current_champion_name][0] + 1
                             else:
-                                if win is True:
-                                    self.win_rates[current_champion_name] = [1, 0]
-                                else:
-                                    self.win_rates[current_champion_name] = [0, 1]
-
-                            # Calculates the kda for each champion
-                            kills = summoner['stats']['kills']
-                            deaths = summoner['stats']['deaths']
-                            assists = summoner['stats']['assists']
-                            kills_assists = kills + assists
-
-                            if current_champion_name in self.all_kda:
-                                self.all_kda[current_champion_name][0] = self.all_kda[current_champion_name][0] + kills_assists
-                                self.all_kda[current_champion_name][1] = self.all_kda[current_champion_name][1] + deaths
+                                self.win_rates[current_champion_name][1] = self.win_rates[current_champion_name][1] + 1
+                        else:
+                            if win is True:
+                                self.win_rates[current_champion_name] = [1, 0]
                             else:
-                                self.all_kda[current_champion_name] = [kills_assists, deaths]
+                                self.win_rates[current_champion_name] = [0, 1]
 
-                    print('loaded 1 game')
+                        # Calculates the kda for each champion
+                        kills = player['kills']
+                        deaths = player['deaths']
+                        assists = player['assists']
+                        kills_assists = kills + assists
 
-                # Maximum number of games that can be loaded at once is 100
-                begin_index += 100
+                        if current_champion_name in self.all_kda:
+                            self.all_kda[current_champion_name][0] = self.all_kda[current_champion_name][0] + kills_assists
+                            self.all_kda[current_champion_name][1] = self.all_kda[current_champion_name][1] + deaths
+                        else:
+                            self.all_kda[current_champion_name] = [kills_assists, deaths]
+                games_loaded += 1
+                print('loaded ', games_loaded, 'games')
 
-        else:
-            self.no_new_data = True
+            if len(match_ids) != 100:
+                self.more_games = False
+            else:
+                start += 100
 
     def populate_all_champion_win_rates(self):
         """
@@ -1171,7 +1114,7 @@ class SingleChampionGui(Screen):
         self.champ_sort = False
         self.win_rate_sort = False
 
-        self.no_new_data = False
+        self.more_games = False
 
         # When season 12 started - Epoch seconds
         self.last_update = 1641560460
@@ -1204,6 +1147,99 @@ class SingleChampionGui(Screen):
         calculate_win_rates - To calculate and update your champion win rates
         :return:
         """
+
+
+        # Clears any previous temp data
+        self.win_rates = {}
+        self.kda = {}
+
+        # If there is previously saved data
+        if os.path.isfile('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv'):
+            df = pandas.read_csv('winrate_csv/' + summoner_1.name + '/all_champions_win_rates.csv')
+
+            for index, line in df.iterrows():
+                if pandas.isna(line['champion_name']):
+                    print("pandas.isna(line['champion_name']", pandas.isna(line['champion_name']))
+                    champion_name = 'None'
+                else:
+                    champion_name = line['champion_name']
+                wins = line['wins']
+                losses = line['losses']
+                kills_assists = line['kills_assists']
+                deaths = line['deaths']
+
+                self.win_rates[champion_name] = [wins, losses]
+                self.all_kda[champion_name] = [kills_assists, deaths]
+
+        start = 0
+        games_loaded = 1
+        while self.more_games:
+
+            self.account_url = 'https://' + summoner_1.area + '.api.riotgames.com/lol/match/v5/matches/by-puuid/' + summoner_1.puuid + '/ids?startTime=' + str(self.last_update) + '&queue=420&start=' + str(start) + '&count=100&api_key=' + str(DevelopmentAPIKey)
+            match_ids = requests.get(self.account_url)
+            match_ids = match_ids.json()
+            for match in match_ids:
+                self.match_url = 'https://' + str(summoner_1.area) + '.api.riotgames.com/lol/match/v5/matches/' + str(match) + '?api_key=' + DevelopmentAPIKey
+
+                match_data = requests.get(self.match_url)
+                match = match_data.json()
+
+                # Todo Using sleep to delay the calls to riot api
+                sleep(2)
+                print('sleeping 2 seconds, to limit api calls')
+
+                # Obtains the champion name the summoner was playing during the match
+                for player in match['info']['participants']:
+                    if player['puuid'] == summoner_1.puuid:
+                        current_champion_name = player['championName']
+
+                        # Calculates the win rates
+                        win = player['win']
+                        if current_champion_name in self.win_rates:
+                            if win is True:
+                                self.win_rates[current_champion_name][0] = self.win_rates[current_champion_name][0] + 1
+                            else:
+                                self.win_rates[current_champion_name][1] = self.win_rates[current_champion_name][1] + 1
+                        else:
+                            if win is True:
+                                self.win_rates[current_champion_name] = [1, 0]
+                            else:
+                                self.win_rates[current_champion_name] = [0, 1]
+
+                        # Calculates the kda for each champion
+                        kills = player['kills']
+                        deaths = player['deaths']
+                        assists = player['assists']
+                        kills_assists = kills + assists
+
+                        if current_champion_name in self.all_kda:
+                            self.all_kda[current_champion_name][0] = self.all_kda[current_champion_name][0] + kills_assists
+                            self.all_kda[current_champion_name][1] = self.all_kda[current_champion_name][1] + deaths
+                        else:
+                            self.all_kda[current_champion_name] = [kills_assists, deaths]
+                games_loaded += 1
+                print('loaded ', games_loaded, 'games')
+
+            if len(match_ids) != 100:
+                self.more_games = False
+            else:
+                start += 100
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         # Clears previous data
         self.win_rates = {}
